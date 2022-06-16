@@ -14,10 +14,12 @@ fn main() {
         .insert_resource(WindowDescriptor {
             width: WINDOW_HEIGHT * WINDOW_RESOLUTION,
             height: WINDOW_HEIGHT,
-            title: "jam 2022".to_string(),
+            title: "jam".to_string(),
             resizable: false,
             ..Default::default()
-        });
+        })
+        .add_startup_system(spawn_camera)
+        .run();
 }
 
 //this spawns a camera with a bottom to top Y coord system and a left to right X coord system
