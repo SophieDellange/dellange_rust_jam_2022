@@ -1321,7 +1321,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "dellagne_rust_jam_2022"
+name = "dellange_rust_jam_2022"
 version = "0.1.0"
 dependencies = [
  "bevy",
