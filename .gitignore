@@ -1,1 +1,3 @@
 /target
+# this one is used temporary to test web env
+/wasm/assets
