@@ -1,9 +1,10 @@
-use bevy::prelude::Color;
+use bevy::prelude::*;
 
 pub const TILE_TYPE_COUNT: u8 = 7;
 
 pub struct Tile {
     pub color: Color,
+    // pub texture: Handle<Texture>,
 }
 
 impl Tile {
@@ -11,6 +12,8 @@ impl Tile {
         if tile_type > TILE_TYPE_COUNT {
             panic!("type_type > {}", TILE_TYPE_COUNT);
         }
+
+        // let texture = asset_server.load("textures/rainbow_island.png");
 
         let unit = 1. / (TILE_TYPE_COUNT as f32);
 
