@@ -68,7 +68,7 @@ fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
 
 fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
     let tile_atlas = TileAtlas::new(asset_server);
-    let map: Map = MapGenerator::new(tile_atlas).build_map(MAP_SIZE.0, MAP_SIZE.1);
+    let map: Map = MapGenerator::new(tile_atlas, MAP_SIZE.0, MAP_SIZE.1).build_map();
 
     for (row_i, row) in map.tiles.iter().enumerate() {
         for (col_i, tile) in row.iter().enumerate() {
