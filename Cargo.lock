@@ -1355,6 +1355,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_egui",
  "bevy_kira_audio",
+ "rand",
 ]
 
 [[package]]

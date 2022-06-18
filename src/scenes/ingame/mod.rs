@@ -1,6 +1,9 @@
 use crate::game;
 use bevy::prelude::{Plugin as BevyPlugin, *};
 
+mod resources;
+mod services;
+
 pub struct Plugin;
 
 impl BevyPlugin for Plugin {
