@@ -28,6 +28,7 @@ fn setup(mut commands: Commands, fonts: Res<Fonts>) {
 }
 
 fn buttons_interactions(
+    mut state: ResMut<State<game::State>>,
     mut exit_event: EventWriter<AppExit>,
     mut mouse_button_input: ResMut<Input<MouseButton>>,
     mut query: Query<
@@ -44,7 +45,7 @@ fn buttons_interactions(
 
                 match action.kind() {
                     ActionKind::Play => {
-                        todo!();
+                        state.set(game::State::Play).unwrap();
                     }
                     ActionKind::Quit => {
                         exit_event.send(AppExit);
