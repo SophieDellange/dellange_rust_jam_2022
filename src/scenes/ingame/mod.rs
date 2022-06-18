@@ -1,4 +1,7 @@
-use crate::{game, scenes::ingame::services::MapGenerator};
+use crate::{
+    game,
+    scenes::ingame::{resources::TileAtlas, services::MapGenerator},
+};
 use bevy::{
     math::const_vec2,
     prelude::{Plugin as BevyPlugin, *},
@@ -9,10 +12,10 @@ use self::resources::Map;
 mod resources;
 mod services;
 
-const TILE_SIZE: Vec2 = const_vec2!([32., 32.]); // pixels
-const TILES_Z: f32 = 1.;
+const TILE_SIZE: Vec2 = const_vec2!([64., 64.]); // pixels
+const TILES_Z: f32 = 0.;
 
-const MAP_SIZE: (u16, u16) = (1, 1);
+const MAP_SIZE: (u16, u16) = (64, 12); // (width, height)
 
 pub struct Plugin;
 
@@ -28,29 +31,36 @@ impl BevyPlugin for Plugin {
     }
 }
 
-fn spawn_camera(mut commands: Commands, windows: ResMut<Windows>) {
-    let window = windows.get_primary().unwrap();
-
+fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
     let mut camera = OrthographicCameraBundle::new_2d();
+
+    // For simplicity shift the camera top left to (0.0).
+
+    let window = windows.get_primary().unwrap();
     camera.transform = Transform::from_xyz(window.width() / 2., -window.height() / 2., 999.);
 
     commands.spawn_bundle(camera);
 }
 
 fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
-    println!("> generate_map");
-    let texture = asset_server.load("textures/rainbow_island.png");
-
-    let map: Map = MapGenerator::new().build_map(MAP_SIZE.0, MAP_SIZE.1);
+    let tile_atlas = TileAtlas::new(asset_server);
+    let map: Map = MapGenerator::new(tile_atlas).build_map(MAP_SIZE.0, MAP_SIZE.1);
 
     for (row_i, row) in map.tiles.iter().enumerate() {
         for (col_i, tile) in row.iter().enumerate() {
-            let tile_location = Vec2::new(col_i as f32 * TILE_SIZE.x, row_i as f32 * TILE_SIZE.y);
+            // The anchor is in the center, so must readjust.
+            let tile_shift = Vec2::new(TILE_SIZE.x / 2.0, -TILE_SIZE.y / 2.0);
+
+            let tile_location =
+                tile_shift + Vec2::new(col_i as f32 * TILE_SIZE.x, -(row_i as f32 * TILE_SIZE.y));
 
             commands.spawn_bundle(SpriteBundle {
-                texture: texture.clone(),
+                texture: tile.texture(),
                 transform: Transform::from_xyz(tile_location.x, tile_location.y, TILES_Z),
-
+                sprite: Sprite {
+                    custom_size: Some(TILE_SIZE),
+                    ..Default::default()
+                },
                 ..default()
             });
         }
@@ -58,7 +68,7 @@ fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>
 }
 
 fn update_game() {
-    println!("update");
+    // println!("update");
 }
 
 fn teardown_game() {
