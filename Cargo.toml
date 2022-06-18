@@ -13,12 +13,18 @@ opt-level = 1
 opt-level = 3
 
 [features]
-dev = [
-    'bevy/dynamic'
-]
+dev = ['bevy/dynamic']
 
 [dependencies]
-bevy = { version = "0.7", features = ["bevy_gilrs", "bevy_winit", "render", "png", "hdr", "x11", "filesystem_watcher"] }
+bevy = { version = "0.7", features = [
+  "bevy_gilrs",
+  "bevy_winit",
+  "render",
+  "png",
+  "hdr",
+  "x11",
+  "filesystem_watcher",
+] }
 bevy-inspector-egui = "0.11"
 bevy_egui = "0.14"
 
