@@ -7,7 +7,7 @@ pub struct TileAtlas {
 }
 
 impl TileAtlas {
-    pub fn new(asset_server: Res<AssetServer>) -> Self {
+    pub fn new(asset_server: &Res<AssetServer>) -> Self {
         let texture = asset_server.load("textures/rainbow_island.png");
 
         let textures = vec![texture];

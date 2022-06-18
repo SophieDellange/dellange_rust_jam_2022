@@ -8,17 +8,16 @@ use bevy::{
     render::camera::Camera2d,
 };
 
-use self::resources::Map;
+use self::resources::{Map, TILE_SIZE};
 
 mod resources;
 mod services;
 
-const TILE_SIZE: Vec2 = const_vec2!([64., 64.]); // pixels
-const TILES_Z: f32 = 0.;
-
 const MAP_SIZE: (u16, u16) = (32, 15); // (width, height)
 
 const PLAYER_MOVE_SPEED: Vec2 = const_vec2!([10., 10.]); // pixels
+
+const ENEMIES_COUNT: u8 = 16;
 
 pub struct Plugin;
 
@@ -40,7 +39,7 @@ impl BevyPlugin for Plugin {
 
 // Return the coordinates of (top left, bottom right)
 //
-fn map_limits(windows: Res<Windows>) -> (Vec2, Vec2) {
+fn camera_limits(windows: Res<Windows>) -> (Vec2, Vec2) {
     let window = windows.get_primary().unwrap();
 
     // For simplicity shift the camera top left to (0.0).
@@ -59,7 +58,7 @@ fn map_limits(windows: Res<Windows>) -> (Vec2, Vec2) {
 fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
     let mut camera = OrthographicCameraBundle::new_2d();
 
-    let (top_left, _) = map_limits(windows);
+    let (top_left, _) = camera_limits(windows);
 
     camera.transform = Transform::from_xyz(top_left.x, top_left.y, 999.);
 
@@ -67,8 +66,11 @@ fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
 }
 
 fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let tile_atlas = TileAtlas::new(asset_server);
-    let map: Map = MapGenerator::new(tile_atlas, MAP_SIZE.0, MAP_SIZE.1).build_map();
+    let tile_atlas = TileAtlas::new(&asset_server);
+    let map_generator = MapGenerator::new(tile_atlas, MAP_SIZE.0, MAP_SIZE.1);
+    let map: Map = map_generator.build_map();
+
+    map_generator.generate_enemies(ENEMIES_COUNT, &mut commands, &asset_server);
 
     for (row_i, row) in map.tiles.iter().enumerate() {
         for (col_i, tile) in row.iter().enumerate() {
@@ -78,15 +80,7 @@ fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>
             let tile_location =
                 tile_shift + Vec2::new(col_i as f32 * TILE_SIZE.x, -(row_i as f32 * TILE_SIZE.y));
 
-            commands.spawn_bundle(SpriteBundle {
-                texture: tile.texture(),
-                transform: Transform::from_xyz(tile_location.x, tile_location.y, TILES_Z),
-                sprite: Sprite {
-                    custom_size: Some(TILE_SIZE),
-                    ..Default::default()
-                },
-                ..default()
-            });
+            tile.spawn(tile_location, &mut commands);
         }
     }
 }
@@ -103,7 +97,7 @@ fn move_player(
         camera_transform.translation.y,
     );
 
-    let (top_left, bottom_right) = map_limits(windows);
+    let (top_left, bottom_right) = camera_limits(windows);
 
     let (mut x_diff, mut y_diff) = (0., 0.);
 
