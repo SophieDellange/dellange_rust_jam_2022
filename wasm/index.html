@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en_GB">
+  <head>
+    <title>Dellange Rusty Jam</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <style>
+        body { background-color: #1c1c1c; align-content: center; display: flex;}
+        canvas { margin: auto; }
+    </style>
+  </head>
+  <body>
+    <script src="./dist/dellange_rust_jam_2022.js"></script>
+    <script>
+      window.addEventListener("load", async () => {
+        await wasm_bindgen("./dist/dellange_rust_jam_2022_bg.wasm");
+      });
+    </script>
+  </body>
+</html>
