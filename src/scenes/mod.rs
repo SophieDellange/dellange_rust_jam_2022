@@ -1,3 +1,4 @@
+mod ingame;
 mod loading;
 mod title;
 
