@@ -5,7 +5,6 @@ use crate::{
     ui::{Action, ActionMarker, EmbossedText, Housing, Overlay, SimpleText},
 };
 
-
 fn main_menu_texts(font: &Handle<Font>) -> (EmbossedText, SimpleText, SimpleText) {
     (
         EmbossedText::big("Rusty Jam\n\nDellange", font),
@@ -16,7 +15,6 @@ fn main_menu_texts(font: &Handle<Font>) -> (EmbossedText, SimpleText, SimpleText
         SimpleText::small("\nTemplate by septum | https://septum.io", font),
     )
 }
-
 
 #[derive(Component)]
 pub struct ScopedMarker;
