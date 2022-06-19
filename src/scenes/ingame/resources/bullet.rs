@@ -41,7 +41,4 @@ pub fn move_bullets(mut query: Query<(&mut Transform, &Bullet)>) {
     }
 }
 
-pub fn spawn_bullets(head: Query<&He>, mut commands: Commands) {
-
-    //Bullet.spawn
-}
+pub fn spawn_bullets(head: Query<&HeadMeat>, mut commands: Commands) {}
