@@ -139,9 +139,9 @@ fn move_camera(
 }
 
 fn update_game() {
-    println!("update");
+    // println!("update");
 }
 
 fn teardown_game() {
-    println!("teardown");
+    // println!("teardown");
 }
