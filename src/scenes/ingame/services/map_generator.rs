@@ -1,7 +1,6 @@
-use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
-use crate::scenes::ingame::resources::{Enemy, Map, TileAtlas, TILE_SIZE};
+use crate::scenes::ingame::resources::{Map, TileAtlas};
 
 pub struct MapGenerator {
     tile_atlas: TileAtlas,
@@ -32,21 +31,5 @@ impl MapGenerator {
             .collect();
 
         Map { tiles }
-    }
-
-    pub fn generate_enemies(
-        &self,
-        count: u8,
-        commands: &mut Commands,
-        asset_server: &Res<AssetServer>,
-    ) {
-        for _ in 0..count {
-            let location = Vec2::new(
-                thread_rng().gen_range(0..(self.map_width * TILE_SIZE.x as u16)) as f32,
-                -(thread_rng().gen_range(0..(self.map_width * TILE_SIZE.x as u16)) as f32),
-            );
-
-            Enemy::new(asset_server).spawn(location, commands);
-        }
     }
 }
