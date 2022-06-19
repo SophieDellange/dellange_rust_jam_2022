@@ -1,6 +1,6 @@
 use crate::{
     game,
-    scenes::ingame::{resources::TileAtlas, services::MapGenerator},
+    scenes::ingame::{resources::*, services::MapGenerator},
 };
 use bevy::{
     prelude::{Plugin as BevyPlugin, *},
@@ -36,7 +36,9 @@ impl BevyPlugin for Plugin {
             SystemSet::on_update(game::State::Play)
                 .with_system(move_player)
                 .with_system(move_camera.after(move_player))
-                .with_system(update_game.after(move_player)),
+                .with_system(update_game.after(move_player))
+                .with_system(resources::spawn_bullets)
+                .with_system(resources::move_bullets),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game));
     }
@@ -186,14 +188,6 @@ fn move_camera(
             - nopan_area_bottom_right.y)
             .max(camera_limit_bottom_right.y);
     }
-}
-
-fn move_bullet(mut q_bullets: Query<&mut Transform, With<Bullet>>, windows: Res<Windows>) {
-    q_bullets.iter_mut().each(|transform, bullet| {
-
-        //transform.translation.x +=
-        //transform.translation.y +=
-    });
 }
 
 fn update_game() {

@@ -1,44 +1,69 @@
 use bevy::{math::const_vec2, prelude::*};
 
+use crate::scenes::ingame::resources::player::Player;
+
 const BULLET_Z: f32 = 0.3;
 const BULLET_SIZE: Vec2 = const_vec2!([6., 6.]);
 
 #[derive(Component)]
 pub struct Bullet {
     texture: Handle<Image>,
-    direction: Option<Vec3>,
+}
+
+#[derive(Component)]
+pub struct BulletItem {
+    direction: Vec2,
+    speed: f32,
 }
 
 impl Bullet {
     pub fn new(asset_server: &Res<AssetServer>) -> Self {
         let texture = asset_server.load("textures/laserGreen1.png");
-        Self {
-            texture,
-            direction: None,
-        }
+        Self { texture }
     }
 
-    pub fn spawn(&self, location: Vec2, direction: Vec3, commands: &mut Commands) {
-        commands.spawn_bundle(SpriteBundle {
-            texture: self.texture.clone(),
-            transform: Transform::from_xyz(location.x, location.y, BULLET_SIZE),
-            sprite: Sprite {
-                custom_size: Some(BULLET_Z),
-                ..Default::default()
-            },
-            ..default()
-        });
+    pub fn spawn(&self, location: &Transform, direction: Vec2, commands: &mut Commands) {
+        let mut new_transf = location.clone();
+        new_transf.rotate(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2));
+
+        commands
+            .spawn_bundle(SpriteBundle {
+                texture: self.texture.clone(),
+                transform: new_transf,
+                sprite: Sprite {
+                    custom_size: Some(BULLET_SIZE),
+                    ..Default::default()
+                },
+                ..default()
+            })
+            .insert(BulletItem {
+                direction,
+                speed: 14.0,
+            });
     }
 }
+
 const TIME_STEP: f32 = 1.0 / 60.0;
 
-pub fn move_bullets(mut query: Query<(&mut Transform, &Bullet)>) {
+// System to move bullets in their direction (should support any direction/speed)
+pub fn move_bullets(mut query: Query<(&mut Transform, &BulletItem)>) {
     for (mut transform, bullet) in query.iter_mut() {
-        if let Some(direction) = bullet.direction {
-            transform.translation.x += direction.x * TIME_STEP;
-            transform.translation.y += direction.y * TIME_STEP;
-        }
+        transform.translation.x += bullet.direction.x * bullet.speed;
+        transform.translation.y += bullet.direction.y * bullet.speed;
     }
 }
 
-pub fn spawn_bullets(head: Query<&HeadMeat>, mut commands: Commands) {}
+pub fn spawn_bullets(
+    mut head: Query<(&Transform, &mut Player)>,
+    server: Res<AssetServer>,
+    time: Res<Time>,
+    mut commands: Commands,
+) {
+    for (spawn_location, mut player) in head.iter_mut() {
+        player.firing_clock.tick(time.delta());
+        if player.firing_clock.finished() {
+            let bullet = Bullet::new(&server);
+            bullet.spawn(spawn_location, Vec2::new(1.0, 0.0), &mut commands);
+        }
+    }
+}
