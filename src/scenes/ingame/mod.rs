@@ -8,7 +8,7 @@ use bevy::{
 };
 use rand::{thread_rng, Rng};
 
-use self::resources::{Enemy, Map, Player, TILE_SIZE};
+use self::resources::{Enemy, Loot, Map, Player, TILE_SIZE};
 
 mod resources;
 mod services;
@@ -16,6 +16,7 @@ mod services;
 const MAP_SIZE: (u16, u16) = (32, 15); // (width, height)
 
 const ENEMIES_COUNT: u8 = 16;
+const LOOT_COUNT: u8 = 16;
 
 const PLAYER_MOVE_SPEED: f32 = 7.5;
 
@@ -28,6 +29,7 @@ impl BevyPlugin for Plugin {
                 .with_system(spawn_camera)
                 .with_system(generate_map_and_tiles)
                 .with_system(spawn_enemies)
+                .with_system(spawn_loot)
                 .with_system(spawn_player),
         )
         .add_system_set(
@@ -110,6 +112,17 @@ fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
         );
 
         Enemy::new(&asset_server).spawn(location, &mut commands);
+    }
+}
+
+fn spawn_loot(mut commands: Commands, asset_server: Res<AssetServer>) {
+    for _ in 0..LOOT_COUNT {
+        let loot_location = Vec2::new(
+            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE.x as u16)) as f32,
+            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE.x as u16)) as f32),
+        );
+
+        Loot::new().spawn(loot_location, &mut commands, &asset_server);
     }
 }
 
