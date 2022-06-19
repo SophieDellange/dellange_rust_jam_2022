@@ -8,7 +8,7 @@ use bevy::{
 };
 use rand::{thread_rng, Rng};
 
-use self::resources::{Enemy, Loot, Map, Player, TILE_SIZE};
+use self::resources::{Enemy, Loot, Map, Pet, Player, TILE_SIZE};
 
 mod resources;
 mod services;
@@ -30,7 +30,7 @@ impl BevyPlugin for Plugin {
                 .with_system(generate_map_and_tiles)
                 .with_system(spawn_enemies)
                 .with_system(spawn_loot)
-                .with_system(spawn_player),
+                .with_system(spawn_player_and_pet),
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
@@ -126,12 +126,20 @@ fn spawn_loot(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 }
 
-fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, windows: Res<Windows>) {
+fn spawn_player_and_pet(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    windows: Res<Windows>,
+) {
     let window = windows.get_primary().unwrap();
 
     let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
 
     Player::new().spawn(player_location, &mut commands, &asset_server);
+
+    let pet_location = player_location + Vec2::new(48., 56.);
+
+    Pet::new().spawn(pet_location, &mut commands, &asset_server);
 }
 
 fn move_player(
