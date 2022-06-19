@@ -19,6 +19,7 @@ const ENEMIES_COUNT: u8 = 16;
 const LOOT_COUNT: u8 = 16;
 
 const PLAYER_MOVE_SPEED: f32 = 7.5;
+const PET_MOVE_SPEED: f32 = 20.0;
 
 pub struct Plugin;
 
@@ -175,8 +176,23 @@ fn move_pet(
         let camera_translation = q_camera.single().translation.truncate();
         let pet_traslation = &mut q_pet.single_mut().translation;
 
-        pet_traslation.x = camera_translation.x - window.width() / 2. + mouse_pos.x;
-        pet_traslation.y = camera_translation.y - window.height() / 2. + mouse_pos.y;
+        let pet_target = Vec2::new(
+            camera_translation.x - window.width() / 2. + mouse_pos.x,
+            camera_translation.y - window.height() / 2. + mouse_pos.y,
+        );
+
+        let target_distance = pet_target - pet_traslation.truncate();
+
+        if target_distance.length().abs() < PET_MOVE_SPEED {
+            pet_traslation.x = pet_target.x;
+            pet_traslation.y = pet_target.y;
+        } else {
+            let pet_move_norm = (pet_target - pet_traslation.truncate()).normalize();
+            let pet_move = pet_move_norm * PET_MOVE_SPEED;
+
+            pet_traslation.x += pet_move.x;
+            pet_traslation.y += pet_move.y;
+        }
     }
 }
 
