@@ -118,10 +118,17 @@ fn move_player(
     camera_transform.translation.y = new_camera_y;
 }
 
+fn move_bullet(
+    mut q_bullets: Query<&mut Transform, With<Bullet>>,
+    windows: Res<Windows>,
+    timeshift: Res<Timer>,
+) {
+}
+
 fn update_game() {
-    println!("update");
+    //println!("update");
 }
 
 fn teardown_game() {
-    println!("teardown");
+    //println!("teardown");
 }
