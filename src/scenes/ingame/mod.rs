@@ -8,12 +8,16 @@ use bevy::{
 };
 use rand::{thread_rng, Rng};
 
-use self::resources::{Enemy, Loot, Map, Pet, Player, TILE_SIZE};
+use self::{
+    camera_utils::{camera_limits, nopan_area},
+    resources::{Enemy, Loot, Map, Pet, Player, TILE_SIZE},
+};
 
+mod camera_utils;
 mod resources;
 mod services;
 
-const MAP_SIZE: (u16, u16) = (32, 15); // (width, height)
+pub const MAP_SIZE: (u16, u16) = (32, 15); // (width, height)
 
 const ENEMIES_COUNT: u8 = 16;
 const LOOT_COUNT: u8 = 16;
@@ -42,40 +46,6 @@ impl BevyPlugin for Plugin {
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game));
     }
-}
-
-// Return the coordinates of (top left, bottom right)
-//
-fn camera_limits(windows: &Res<Windows>) -> (Vec2, Vec2) {
-    let window = windows.get_primary().unwrap();
-
-    // For simplicity shift the camera top left to (0.0).
-    // DON'T FORGET THE Y SIGN!!
-
-    let top_left = Vec2::new(window.width() / 2., -window.height() / 2.);
-    let bottom_right = top_left
-        + Vec2::new(
-            (MAP_SIZE.0 as f32 * TILE_SIZE.x) - window.width(),
-            -(MAP_SIZE.1 as f32 * TILE_SIZE.y) + window.height(),
-        );
-
-    (top_left, bottom_right)
-}
-
-// When the player is Within this area, the camera doesn't pan.
-//
-// Return the coordinates of (top left, bottom right)
-//
-fn nopan_area(windows: &Res<Windows>, camera_location: Vec2) -> (Vec2, Vec2) {
-    let window = windows.get_primary().unwrap();
-
-    // Coordinates are relative to the center of the camera.
-
-    let top_left = Vec2::new(-window.width() * 3. / 8., window.height() / 4.);
-
-    let bottom_right = Vec2::new(0., -window.height() / 4.);
-
-    (camera_location + top_left, camera_location + bottom_right)
 }
 
 fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
