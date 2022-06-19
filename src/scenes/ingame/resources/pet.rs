@@ -1,7 +1,7 @@
 use bevy::{math::const_vec2, prelude::*};
 
 const PET_Z: f32 = 1.0;
-const PET_SIZE: Vec2 = const_vec2!([64., 64.]);
+pub const PET_SIZE: Vec2 = const_vec2!([64., 64.]);
 
 #[derive(Component)]
 pub struct Pet {}

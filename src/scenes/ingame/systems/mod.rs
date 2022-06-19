@@ -121,6 +121,25 @@ pub fn move_pet(
     }
 }
 
+pub fn pet_pick_loot(
+    q_loot: Query<&Transform, With<Loot>>,
+    q_mouse_buttons: Res<Input<MouseButton>>,
+    q_pet: Query<&Transform, With<Pet>>,
+) {
+    if q_mouse_buttons.just_pressed(MouseButton::Left) {
+        let pet_location = q_pet.single().translation.truncate();
+
+        for loot_location in q_loot.iter() {
+            let loot_location = loot_location.translation.truncate();
+            let loot_distance = (pet_location - loot_location).length().abs();
+
+            if loot_distance <= PET_PICK_LOOT_RADIUS {
+                println!("Picking loot!");
+            }
+        }
+    }
+}
+
 pub fn move_camera(
     q_player_transform: Query<&Transform, With<Player>>,
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
