@@ -3,7 +3,6 @@ use crate::{
     scenes::ingame::{resources::TileAtlas, services::MapGenerator},
 };
 use bevy::{
-    math::const_vec2,
     prelude::{Plugin as BevyPlugin, *},
     render::camera::Camera2d,
 };
@@ -18,7 +17,7 @@ const MAP_SIZE: (u16, u16) = (32, 15); // (width, height)
 
 const ENEMIES_COUNT: u8 = 16;
 
-const PLAYER_MOVE_SPEED: Vec2 = const_vec2!([10., 10.]); // pixels
+const PLAYER_MOVE_SPEED: f32 = 7.5;
 
 pub struct Plugin;
 
@@ -33,8 +32,9 @@ impl BevyPlugin for Plugin {
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
-                .with_system(move_camera)
-                .with_system(update_game.after(move_camera)),
+                .with_system(move_player)
+                .with_system(move_camera.after(move_player))
+                .with_system(update_game.after(move_player)),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game));
     }
@@ -42,7 +42,7 @@ impl BevyPlugin for Plugin {
 
 // Return the coordinates of (top left, bottom right)
 //
-fn camera_limits(windows: Res<Windows>) -> (Vec2, Vec2) {
+fn camera_limits(windows: &Res<Windows>) -> (Vec2, Vec2) {
     let window = windows.get_primary().unwrap();
 
     // For simplicity shift the camera top left to (0.0).
@@ -58,10 +58,26 @@ fn camera_limits(windows: Res<Windows>) -> (Vec2, Vec2) {
     (top_left, bottom_right)
 }
 
+// When the player is Within this area, the camera doesn't pan.
+//
+// Return the coordinates of (top left, bottom right)
+//
+fn nopan_area(windows: &Res<Windows>, camera_location: Vec2) -> (Vec2, Vec2) {
+    let window = windows.get_primary().unwrap();
+
+    // Coordinates are relative to the center of the camera.
+
+    let top_left = Vec2::new(-window.width() * 3. / 8., window.height() / 4.);
+
+    let bottom_right = Vec2::new(0., -window.height() / 4.);
+
+    (camera_location + top_left, camera_location + bottom_right)
+}
+
 fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
     let mut camera = OrthographicCameraBundle::new_2d();
 
-    let (top_left, _) = camera_limits(windows);
+    let (top_left, _) = camera_limits(&windows);
 
     camera.transform = Transform::from_xyz(top_left.x, top_left.y, 999.);
 
@@ -102,46 +118,67 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, windows:
 
     let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
 
-    Player::new(&asset_server).spawn(player_location, &mut commands);
+    Player::new().spawn(player_location, &mut commands, &asset_server);
 }
 
-fn move_camera(
+fn move_player(
     keys: Res<Input<KeyCode>>,
-    mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
-    windows: Res<Windows>,
+    mut q_player_transform: Query<&mut Transform, With<Player>>,
 ) {
-    let mut camera_transform = q_camera.single_mut();
-
-    let (camera_x, camera_y) = (
-        camera_transform.translation.x,
-        camera_transform.translation.y,
-    );
-
-    let (top_left, bottom_right) = camera_limits(windows);
-
+    let mut player_transform = q_player_transform.single_mut();
     let (mut x_diff, mut y_diff) = (0., 0.);
 
     if keys.pressed(KeyCode::W) {
-        y_diff = PLAYER_MOVE_SPEED.y;
+        y_diff = PLAYER_MOVE_SPEED;
     } else if keys.pressed(KeyCode::A) {
-        x_diff = -PLAYER_MOVE_SPEED.x;
+        x_diff = -PLAYER_MOVE_SPEED;
     } else if keys.pressed(KeyCode::S) {
-        y_diff = -PLAYER_MOVE_SPEED.y;
+        y_diff = -PLAYER_MOVE_SPEED;
     } else if keys.pressed(KeyCode::D) {
-        x_diff = PLAYER_MOVE_SPEED.x;
+        x_diff = PLAYER_MOVE_SPEED;
     }
 
-    let new_camera_x = (camera_x + x_diff).clamp(top_left.x, bottom_right.x);
-    let new_camera_y = (camera_y + y_diff).clamp(bottom_right.y, top_left.y);
+    player_transform.translation.x = player_transform.translation.x + x_diff;
+    player_transform.translation.y = player_transform.translation.y + y_diff;
+}
 
-    camera_transform.translation.x = new_camera_x;
-    camera_transform.translation.y = new_camera_y;
+fn move_camera(
+    q_player_transform: Query<&Transform, With<Player>>,
+    mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
+    windows: Res<Windows>,
+) {
+    let player_translation = q_player_transform.single().translation;
+    let camera_translation = &mut q_camera.single_mut().translation;
+
+    let (nopan_area_top_left, nopan_area_bottom_right) =
+        nopan_area(&windows, camera_translation.truncate());
+    let (camera_limit_top_left, camera_limit_bottom_right) = camera_limits(&windows);
+
+    if player_translation.x < nopan_area_top_left.x {
+        camera_translation.x = (camera_translation.x + player_translation.x
+            - nopan_area_top_left.x)
+            .max(camera_limit_top_left.x);
+    } else if player_translation.x > nopan_area_bottom_right.x {
+        camera_translation.x = (camera_translation.x + player_translation.x
+            - nopan_area_bottom_right.x)
+            .min(camera_limit_bottom_right.x);
+    }
+
+    if player_translation.y > nopan_area_top_left.y {
+        camera_translation.y = (camera_translation.y + player_translation.y
+            - nopan_area_top_left.y)
+            .min(camera_limit_top_left.y);
+    } else if player_translation.y < nopan_area_bottom_right.y {
+        camera_translation.y = (camera_translation.y + player_translation.y
+            - nopan_area_bottom_right.y)
+            .max(camera_limit_bottom_right.y);
+    }
 }
 
 fn update_game() {
-    println!("update");
+    // println!("update");
 }
 
 fn teardown_game() {
-    println!("teardown");
+    // println!("teardown");
 }
