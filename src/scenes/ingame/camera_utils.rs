@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{resources::TILE_SIZE, MAP_SIZE};
+use super::{constants::*, resources::TILE_SIZE};
 
 // Return the coordinates of (top left, bottom right)
 //
