@@ -80,11 +80,14 @@ pub fn move_player(
 
     if keys.pressed(KeyCode::W) {
         y_diff = PLAYER_MOVE_SPEED;
-    } else if keys.pressed(KeyCode::A) {
+    }
+    if keys.pressed(KeyCode::A) {
         x_diff = -PLAYER_MOVE_SPEED;
-    } else if keys.pressed(KeyCode::S) {
+    }
+    if keys.pressed(KeyCode::S) {
         y_diff = -PLAYER_MOVE_SPEED;
-    } else if keys.pressed(KeyCode::D) {
+    }
+    if keys.pressed(KeyCode::D) {
         x_diff = PLAYER_MOVE_SPEED;
     }
 
