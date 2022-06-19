@@ -35,6 +35,7 @@ impl BevyPlugin for Plugin {
         .add_system_set(
             SystemSet::on_update(game::State::Play)
                 .with_system(move_player)
+                .with_system(move_pet)
                 .with_system(move_camera.after(move_player))
                 .with_system(update_game.after(move_player)),
         )
@@ -161,6 +162,22 @@ fn move_player(
 
     player_transform.translation.x = player_transform.translation.x + x_diff;
     player_transform.translation.y = player_transform.translation.y + y_diff;
+}
+
+fn move_pet(
+    windows: Res<Windows>,
+    q_camera: Query<&GlobalTransform, With<Camera2d>>,
+    mut q_pet: Query<&mut Transform, With<Pet>>,
+) {
+    let window = windows.get_primary().unwrap();
+
+    if let Some(mouse_pos) = window.cursor_position() {
+        let camera_translation = q_camera.single().translation.truncate();
+        let pet_traslation = &mut q_pet.single_mut().translation;
+
+        pet_traslation.x = camera_translation.x - window.width() / 2. + mouse_pos.x;
+        pet_traslation.y = camera_translation.y - window.height() / 2. + mouse_pos.y;
+    }
 }
 
 fn move_camera(
