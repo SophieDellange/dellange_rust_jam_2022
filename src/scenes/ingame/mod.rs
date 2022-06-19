@@ -7,17 +7,18 @@ use bevy::{
     prelude::{Plugin as BevyPlugin, *},
     render::camera::Camera2d,
 };
+use rand::{thread_rng, Rng};
 
-use self::resources::{Map, TILE_SIZE};
+use self::resources::{Enemy, Map, Player, TILE_SIZE};
 
 mod resources;
 mod services;
 
 const MAP_SIZE: (u16, u16) = (32, 15); // (width, height)
 
-const PLAYER_MOVE_SPEED: Vec2 = const_vec2!([10., 10.]); // pixels
-
 const ENEMIES_COUNT: u8 = 16;
+
+const PLAYER_MOVE_SPEED: Vec2 = const_vec2!([10., 10.]); // pixels
 
 pub struct Plugin;
 
@@ -26,12 +27,14 @@ impl BevyPlugin for Plugin {
         app.add_system_set(
             SystemSet::on_enter(game::State::Play)
                 .with_system(spawn_camera)
-                .with_system(generate_map_and_tiles.after(spawn_camera)),
+                .with_system(generate_map_and_tiles)
+                .with_system(spawn_enemies)
+                .with_system(spawn_player),
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
-                .with_system(move_player)
-                .with_system(update_game.after(move_player)),
+                .with_system(move_camera)
+                .with_system(update_game.after(move_camera)),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game));
     }
@@ -70,8 +73,6 @@ fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>
     let map_generator = MapGenerator::new(tile_atlas, MAP_SIZE.0, MAP_SIZE.1);
     let map: Map = map_generator.build_map();
 
-    map_generator.generate_enemies(ENEMIES_COUNT, &mut commands, &asset_server);
-
     for (row_i, row) in map.tiles.iter().enumerate() {
         for (col_i, tile) in row.iter().enumerate() {
             // The anchor is in the center, so must readjust.
@@ -85,7 +86,26 @@ fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>
     }
 }
 
-fn move_player(
+fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
+    for _ in 0..ENEMIES_COUNT {
+        let location = Vec2::new(
+            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE.x as u16)) as f32,
+            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE.x as u16)) as f32),
+        );
+
+        Enemy::new(&asset_server).spawn(location, &mut commands);
+    }
+}
+
+fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, windows: Res<Windows>) {
+    let window = windows.get_primary().unwrap();
+
+    let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
+
+    Player::new(&asset_server).spawn(player_location, &mut commands);
+}
+
+fn move_camera(
     keys: Res<Input<KeyCode>>,
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
     windows: Res<Windows>,
