@@ -79,20 +79,22 @@ pub fn move_player(
     let (mut x_diff, mut y_diff) = (0., 0.);
 
     if keys.pressed(KeyCode::W) {
-        y_diff = PLAYER_MOVE_SPEED;
+        y_diff = 1.;
     }
     if keys.pressed(KeyCode::A) {
-        x_diff = -PLAYER_MOVE_SPEED;
+        x_diff = -1.;
     }
     if keys.pressed(KeyCode::S) {
-        y_diff = -PLAYER_MOVE_SPEED;
+        y_diff = -1.;
     }
     if keys.pressed(KeyCode::D) {
-        x_diff = PLAYER_MOVE_SPEED;
+        x_diff = 1.;
     }
 
-    player_transform.translation.x = player_transform.translation.x + x_diff;
-    player_transform.translation.y = player_transform.translation.y + y_diff;
+    let normalized_diff = Vec2::new(x_diff, y_diff).normalize_or_zero() * PLAYER_MOVE_SPEED;
+
+    player_transform.translation.x = player_transform.translation.x + normalized_diff.x;
+    player_transform.translation.y = player_transform.translation.y + normalized_diff.y;
 }
 
 pub fn move_pet(
