@@ -10,7 +10,7 @@ pub struct Enemy {
 
 impl Enemy {
     pub fn new(asset_server: &Res<AssetServer>) -> Self {
-        let texture = asset_server.load("textures/enemy.png");
+        let texture = asset_server.load("textures/enemy_bee.png");
 
         Self { texture }
     }
