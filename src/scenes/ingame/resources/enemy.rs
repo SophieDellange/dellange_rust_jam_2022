@@ -1,5 +1,7 @@
 use bevy::{math::const_vec2, prelude::*};
 
+use super::Collider;
+
 const ENEMIES_Z: f32 = 1.0;
 const ENEMIES_SIZE: Vec2 = const_vec2!([64., 64.]);
 
@@ -16,14 +18,16 @@ impl Enemy {
     }
 
     pub fn spawn(&self, location: Vec2, commands: &mut Commands) {
-        commands.spawn_bundle(SpriteBundle {
-            texture: self.texture.clone(),
-            transform: Transform::from_xyz(location.x, location.y, ENEMIES_Z),
-            sprite: Sprite {
-                custom_size: Some(ENEMIES_SIZE),
-                ..Default::default()
-            },
-            ..default()
-        });
+        commands
+            .spawn_bundle(SpriteBundle {
+                texture: self.texture.clone(),
+                transform: Transform::from_xyz(location.x, location.y, ENEMIES_Z),
+                sprite: Sprite {
+                    custom_size: Some(ENEMIES_SIZE),
+                    ..Default::default()
+                },
+                ..default()
+            })
+            .insert(Collider {});
     }
 }
