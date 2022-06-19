@@ -18,7 +18,7 @@ const MAP_SIZE: (u16, u16) = (32, 15); // (width, height)
 
 const ENEMIES_COUNT: u8 = 16;
 
-const PLAYER_MOVE_SPEED: Vec2 = const_vec2!([10., 10.]); // pixels
+const PLAYER_MOVE_SPEED: f32 = 7.5;
 
 pub struct Plugin;
 
@@ -33,8 +33,9 @@ impl BevyPlugin for Plugin {
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
-                .with_system(move_camera)
-                .with_system(update_game.after(move_camera)),
+                .with_system(move_player)
+                .with_system(move_camera.after(move_player))
+                .with_system(update_game.after(move_player)),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game));
     }
@@ -102,40 +103,52 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, windows:
 
     let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
 
-    Player::new(&asset_server).spawn(player_location, &mut commands);
+    Player::new().spawn(player_location, &mut commands, &asset_server);
+}
+
+fn move_player(
+    keys: Res<Input<KeyCode>>,
+    mut q_player_transform: Query<&mut Transform, With<Player>>,
+    mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
+    windows: Res<Windows>,
+) {
+    let mut player_transform = q_player_transform.single_mut();
+    let (mut x_diff, mut y_diff) = (0., 0.);
+
+    if keys.pressed(KeyCode::W) {
+        y_diff = PLAYER_MOVE_SPEED;
+    } else if keys.pressed(KeyCode::A) {
+        x_diff = -PLAYER_MOVE_SPEED;
+    } else if keys.pressed(KeyCode::S) {
+        y_diff = -PLAYER_MOVE_SPEED;
+    } else if keys.pressed(KeyCode::D) {
+        x_diff = PLAYER_MOVE_SPEED;
+    }
+
+    player_transform.translation.x = player_transform.translation.x + x_diff;
+    player_transform.translation.y = player_transform.translation.y + y_diff;
 }
 
 fn move_camera(
     keys: Res<Input<KeyCode>>,
+    mut q_player_transform: Query<&mut Transform, With<Player>>,
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
     windows: Res<Windows>,
 ) {
-    let mut camera_transform = q_camera.single_mut();
-
-    let (camera_x, camera_y) = (
-        camera_transform.translation.x,
-        camera_transform.translation.y,
-    );
-
-    let (top_left, bottom_right) = camera_limits(windows);
-
-    let (mut x_diff, mut y_diff) = (0., 0.);
-
-    if keys.pressed(KeyCode::W) {
-        y_diff = PLAYER_MOVE_SPEED.y;
-    } else if keys.pressed(KeyCode::A) {
-        x_diff = -PLAYER_MOVE_SPEED.x;
-    } else if keys.pressed(KeyCode::S) {
-        y_diff = -PLAYER_MOVE_SPEED.y;
-    } else if keys.pressed(KeyCode::D) {
-        x_diff = PLAYER_MOVE_SPEED.x;
-    }
-
-    let new_camera_x = (camera_x + x_diff).clamp(top_left.x, bottom_right.x);
-    let new_camera_y = (camera_y + y_diff).clamp(bottom_right.y, top_left.y);
-
-    camera_transform.translation.x = new_camera_x;
-    camera_transform.translation.y = new_camera_y;
+    //     let mut camera_transform = q_camera.single_mut();
+    //
+    //     let (camera_x, camera_y) = (
+    //         camera_transform.translation.x,
+    //         camera_transform.translation.y,
+    //     );
+    //
+    //     let (top_left, bottom_right) = camera_limits(windows);
+    //
+    //     let new_camera_x = (camera_x + x_diff).clamp(top_left.x, bottom_right.x);
+    //     let new_camera_y = (camera_y + y_diff).clamp(bottom_right.y, top_left.y);
+    //
+    //     camera_transform.translation.x = new_camera_x;
+    //     camera_transform.translation.y = new_camera_y;
 }
 
 fn update_game() {
