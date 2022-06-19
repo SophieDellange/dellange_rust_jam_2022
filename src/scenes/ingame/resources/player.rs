@@ -21,7 +21,7 @@ impl Player {
     pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
         let player = Player::new();
 
-        let texture = asset_server.load("textures/player_brick_crate.png");
+        let texture = asset_server.load("textures/block_core.png");
 
         let sprite_bundle = SpriteBundle {
             texture: texture,

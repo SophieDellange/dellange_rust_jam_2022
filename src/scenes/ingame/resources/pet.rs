@@ -21,7 +21,7 @@ impl Pet {
     pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
         let pet = Self::new();
 
-        let texture = asset_server.load("textures/pet_bee.png");
+        let texture = asset_server.load("textures/hook.png");
 
         let sprite_bundle = SpriteBundle {
             texture: texture,
