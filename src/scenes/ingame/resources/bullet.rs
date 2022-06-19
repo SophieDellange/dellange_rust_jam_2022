@@ -1,4 +1,6 @@
-use bevy::{math::const_vec2, prelude::*};
+use std::ops::Add;
+
+use bevy::{math::const_vec2, prelude::*, utils::Duration};
 
 use crate::scenes::ingame::resources::player::Player;
 
@@ -14,6 +16,7 @@ pub struct Bullet {
 pub struct BulletItem {
     direction: Vec2,
     speed: f32,
+    life_time: Timer,
 }
 
 impl Bullet {
@@ -39,6 +42,7 @@ impl Bullet {
             .insert(BulletItem {
                 direction,
                 speed: 14.0,
+                life_time: Timer::new(Duration::from_secs_f32(2.0), false),
             });
     }
 }
@@ -46,10 +50,19 @@ impl Bullet {
 const TIME_STEP: f32 = 1.0 / 60.0;
 
 // System to move bullets in their direction (should support any direction/speed)
-pub fn move_bullets(mut query: Query<(&mut Transform, &BulletItem)>) {
-    for (mut transform, bullet) in query.iter_mut() {
-        transform.translation.x += bullet.direction.x * bullet.speed;
-        transform.translation.y += bullet.direction.y * bullet.speed;
+pub fn move_bullets(
+    mut query: Query<(&mut Transform, &mut BulletItem, Entity)>,
+    time: Res<Time>,
+    mut commands: Commands,
+) {
+    for (mut transform, mut bullet, entity) in query.iter_mut() {
+        bullet.life_time.tick(time.delta());
+        if bullet.life_time.finished() {
+            commands.entity(entity).despawn();
+        } else {
+            transform.translation.x += bullet.direction.x * bullet.speed;
+            transform.translation.y += bullet.direction.y * bullet.speed;
+        }
     }
 }
 
