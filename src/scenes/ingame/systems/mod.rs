@@ -1,7 +1,9 @@
 use bevy::{prelude::*, render::camera::Camera2d};
 use rand::{thread_rng, Rng};
 
-use super::{camera_utils::*, constants::*, resources::*, services::*};
+use super::{
+    camera_utils::*, components::LootTransported, constants::*, resources::*, services::*,
+};
 
 pub fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
     let mut camera = OrthographicCameraBundle::new_2d();
@@ -122,21 +124,42 @@ pub fn move_pet(
 }
 
 pub fn pet_pick_loot(
-    q_loot: Query<&Transform, With<Loot>>,
+    mut commands: Commands,
+    q_loot_transported: Query<&LootTransported>,
+    q_loot: Query<(Entity, &Transform), With<Loot>>,
     q_mouse_buttons: Res<Input<MouseButton>>,
     q_pet: Query<&Transform, With<Pet>>,
 ) {
-    if q_mouse_buttons.just_pressed(MouseButton::Left) {
+    let any_loot_transported = q_loot_transported.get_single().is_ok();
+
+    if !any_loot_transported && q_mouse_buttons.just_pressed(MouseButton::Left) {
         let pet_location = q_pet.single().translation.truncate();
 
-        for loot_location in q_loot.iter() {
+        for (loot_entity, loot_location) in q_loot.iter() {
             let loot_location = loot_location.translation.truncate();
             let loot_distance = (pet_location - loot_location).length().abs();
 
             if loot_distance <= PET_PICK_LOOT_RADIUS {
-                println!("Picking loot!");
+                commands.entity(loot_entity).insert(LootTransported::new());
             }
         }
+    }
+}
+
+pub fn pet_move_loot(
+    mut q: ParamSet<(
+        Query<&Transform, With<Pet>>,
+        Query<&mut Transform, With<LootTransported>>,
+    )>,
+) {
+    let pet_location = q.p0().single().translation;
+
+    let mut q1 = q.p1();
+    let loot_transported = q1.get_single_mut();
+
+    if let Ok(mut loot_transported) = loot_transported {
+        loot_transported.translation.x = pet_location.x;
+        loot_transported.translation.y = pet_location.y;
     }
 }
 
