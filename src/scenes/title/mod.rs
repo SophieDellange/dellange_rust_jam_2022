@@ -23,8 +23,14 @@ impl BevyPlugin for Plugin {
     }
 }
 
-fn setup(mut commands: Commands, fonts: Res<Fonts>) {
-    ui::spawn(&mut commands, &fonts);
+fn setup(mut commands: Commands, fonts: Res<Fonts>, mut state: ResMut<State<game::State>>) {
+    let skip_menu_val = std::env::var("JAM_SKIP_MENU").unwrap_or(String::from(""));
+
+    if skip_menu_val == "" {
+        ui::spawn(&mut commands, &fonts);
+    } else {
+        state.set(game::State::Play).unwrap();
+    }
 }
 
 fn buttons_interactions(
