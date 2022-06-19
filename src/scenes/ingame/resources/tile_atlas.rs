@@ -8,9 +8,10 @@ pub struct TileAtlas {
 
 impl TileAtlas {
     pub fn new(asset_server: &Res<AssetServer>) -> Self {
-        let texture = asset_server.load("textures/rainbow_island.png");
+        let texture_terrain = asset_server.load("textures/ground_terrain.png");
+        let texture_water = asset_server.load("textures/ground_water.png");
 
-        let textures = vec![texture];
+        let textures = vec![texture_terrain, texture_water];
 
         Self { textures }
     }
