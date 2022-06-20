@@ -4,7 +4,6 @@ use bevy::{math::const_vec2, prelude::*, utils::Duration};
 
 use crate::scenes::ingame::resources::player::Player;
 
-const BULLET_Z: f32 = 0.3;
 const BULLET_SIZE: Vec2 = const_vec2!([6., 6.]);
 
 #[derive(Component)]
@@ -46,8 +45,6 @@ impl Bullet {
             });
     }
 }
-
-const TIME_STEP: f32 = 1.0 / 60.0;
 
 // System to move bullets in their direction (should support any direction/speed)
 pub fn move_bullets(
