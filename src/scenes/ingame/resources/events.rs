@@ -22,7 +22,7 @@ impl Default for BlockData {
 
 impl BlockData {
     pub fn deal_damage(&mut self, amount: u8) {
-        self.health.saturating_sub(amount);
+        self.health = self.health.saturating_sub(amount);
         if self.health < 1 {
             self.alive = false;
         }
