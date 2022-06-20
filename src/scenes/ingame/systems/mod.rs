@@ -64,7 +64,7 @@ pub fn spawn_player_and_pet(
 
     let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
 
-    PlayerTile::new().spawn(player_location, &mut commands, &asset_server);
+    PlayerCoreTile::new().spawn(player_location, &mut commands, &asset_server);
 
     let pet_location = player_location + Vec2::new(48., 56.);
 
@@ -73,7 +73,7 @@ pub fn spawn_player_and_pet(
 
 pub fn move_player(
     keys: Res<Input<KeyCode>>,
-    mut q_player_tiles_transform: Query<&mut Transform, With<PlayerTile>>,
+    mut q_player_tiles_transform: Query<&mut Transform, With<PlayerCoreTile>>,
 ) {
     let (mut x_diff, mut y_diff) = (0., 0.);
 
@@ -174,7 +174,7 @@ pub fn pet_move_loot(
 pub fn pet_lock_loot(
     mut commands: Commands,
     mut q: ParamSet<(
-        Query<&Transform, With<PlayerTile>>,
+        Query<&Transform, With<PlayerCoreTile>>,
         Query<&Transform, With<LootTransported>>,
         Query<(Entity, &mut Transform), With<TicketLockPlaceholder>>,
     )>,
@@ -267,7 +267,7 @@ pub fn pet_lock_loot(
 }
 
 pub fn move_camera(
-    q_player_transform: Query<&Transform, With<PlayerTile>>,
+    q_player_transform: Query<&Transform, With<PlayerCoreTile>>,
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
     windows: Res<Windows>,
 ) {
