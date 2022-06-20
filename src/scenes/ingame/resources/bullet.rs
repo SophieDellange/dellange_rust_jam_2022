@@ -23,7 +23,11 @@ impl Bullet {
     }
 
     pub fn spawn(&self, location: &Transform, direction: Vec2, commands: &mut Commands) {
+        /// Starts from the producer position
         let mut new_transf = location.clone();
+        //let spawn_loc = new_transf.translation.truncate() + direction;
+
+        //new_transf.translation = Vec3::new(spawn_loc.x, spawn_loc.x, location.translation.z);
         new_transf.rotate(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2));
 
         commands

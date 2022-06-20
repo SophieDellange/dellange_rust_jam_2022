@@ -1,4 +1,5 @@
 use bevy::prelude::{Plugin as BevyPlugin, *};
+use bevy_inspector_egui::RegisterInspectable;
 
 mod camera_utils;
 mod components;
@@ -7,7 +8,7 @@ mod resources;
 mod services;
 mod systems;
 
-use self::systems::*;
+use self::{resources::BlockData, systems::*};
 use crate::game;
 
 pub struct Plugin;
@@ -37,6 +38,7 @@ impl BevyPlugin for Plugin {
                 .with_system(pet_attach_loot.after(pet_move_loot)),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game))
-        .add_event::<resources::BulletCollisionEvent>();
+        .add_event::<resources::BulletCollisionEvent>()
+        .register_type::<BlockData>();
     }
 }

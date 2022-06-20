@@ -1,6 +1,6 @@
 use bevy::{math::const_vec2, prelude::*};
 
-use super::Collider;
+use super::{BlockData, Collider};
 
 const ENEMIES_Z: f32 = 1.0;
 const ENEMIES_SIZE: Vec2 = const_vec2!([64., 64.]);
@@ -28,6 +28,10 @@ impl Enemy {
                 },
                 ..default()
             })
-            .insert(Collider {});
+            .insert(Collider {})
+            .insert(BlockData {
+                health: 12,
+                ..default()
+            });
     }
 }

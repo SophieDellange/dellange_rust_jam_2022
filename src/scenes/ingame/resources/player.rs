@@ -1,7 +1,7 @@
 use bevy::utils::Duration;
 use bevy::{math::const_vec2, prelude::*};
 
-use super::Collider;
+use super::{BlockData, Collider};
 
 const PLAYER_Z: f32 = 1.0;
 const PLAYER_SIZE: Vec2 = const_vec2!([64., 64.]);
@@ -39,6 +39,12 @@ impl Player {
             sprite_bundle,
         };
 
-        commands.spawn_bundle(player_bundle).insert(Collider);
+        commands
+            .spawn_bundle(player_bundle)
+            .insert(Collider)
+            .insert(BlockData {
+                health: 20,
+                ..default()
+            });
     }
 }
