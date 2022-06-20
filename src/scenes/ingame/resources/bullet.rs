@@ -1,5 +1,3 @@
-use std::ops::Add;
-
 use bevy::{math::const_vec2, prelude::*, utils::Duration};
 
 use crate::scenes::ingame::resources::player::Player;
