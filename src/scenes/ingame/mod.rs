@@ -31,7 +31,8 @@ impl BevyPlugin for Plugin {
                 .with_system(resources::spawn_bullets)
                 .with_system(resources::move_bullets)
                 .with_system(pet_pick_loot.after(move_pet))
-                .with_system(pet_move_loot.after(move_pet)),
+                .with_system(pet_move_loot.after(move_pet))
+                .with_system(pet_lock_loot.after(pet_move_loot)),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game));
     }

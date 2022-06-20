@@ -171,6 +171,101 @@ pub fn pet_move_loot(
     }
 }
 
+pub fn pet_lock_loot(
+    mut commands: Commands,
+    mut q: ParamSet<(
+        Query<&Transform, With<PlayerTile>>,
+        Query<&Transform, With<LootTransported>>,
+        Query<(Entity, &mut Transform), With<TicketLockPlaceholder>>,
+    )>,
+    asset_server: Res<AssetServer>,
+) {
+    // The problem of finding the available positions is actually not as simple as one would think,
+    // for several reasons (e.g. floats can't be hashed without rounding; hashing with rounding screams
+    // for errors, etc.etc).
+    //
+    // We therefore apply a st00pid simple solution:
+    //
+    // - if the loot position is within a given distance from a player tile, it has at most two potential
+    //   positions
+    // - we collect the potential positions
+    // - we filter out the occupied ones
+    // - we sort them from closes to farthest
+    // - we pick the closest
+
+    let radius = Vec2::new(TILE_SIZE, TILE_SIZE).length();
+
+    let q_loot_transform = q.p1();
+
+    if let Ok(loot_transform) = q_loot_transform.get_single() {
+        let loot_position = loot_transform.translation.truncate();
+
+        let q_player_tiles_transform = q.p0();
+
+        let player_tile_positions = q_player_tiles_transform
+            .iter()
+            .map(|transform| transform.translation.truncate())
+            .collect::<Vec<_>>();
+
+        let mut potential_positions = vec![];
+
+        // The functionally composed version is more confusing.
+        //
+        for player_tile_position in &player_tile_positions {
+            let distance_vec = loot_position - *player_tile_position;
+
+            // For simplicity, we put both positions (horizontal and vertical).
+            //
+            if distance_vec.length() < radius {
+                potential_positions.push(Vec2::new(
+                    player_tile_position.x,
+                    player_tile_position.y + (TILE_SIZE * distance_vec.y.signum()),
+                ));
+                potential_positions.push(Vec2::new(
+                    player_tile_position.x + (TILE_SIZE * distance_vec.x.signum()),
+                    player_tile_position.y,
+                ));
+            }
+        }
+
+        // Arbitrary; can be much smaller.
+        //
+        const EPSILON: f32 = 0.1;
+
+        let mut available_positions = potential_positions
+            .into_iter()
+            .filter(|potential_position| {
+                player_tile_positions.iter().any(|player_tile_position| {
+                    (*player_tile_position - *potential_position).length() > EPSILON
+                })
+            })
+            .collect::<Vec<_>>();
+
+        available_positions.sort_by(|available_pos1, available_pos2| {
+            let dist1 = (loot_position - *available_pos1).length();
+            let dist2 = (loot_position - *available_pos2).length();
+
+            dist1.partial_cmp(&dist2).unwrap()
+        });
+
+        let mut q_tile_lock_placeholder = q.p2();
+        let tile_lock_placeholder = q_tile_lock_placeholder.get_single_mut();
+
+        if let Some(best_position) = available_positions.first() {
+            if let Ok((_, mut tile_lock_placeholder)) = tile_lock_placeholder {
+                tile_lock_placeholder.translation.x = best_position.x;
+                tile_lock_placeholder.translation.y = best_position.y;
+            } else {
+                TicketLockPlaceholder::new().spawn(*best_position, &mut commands, &asset_server);
+            }
+        } else {
+            if let Ok((placeholder_id, _)) = tile_lock_placeholder {
+                commands.entity(placeholder_id).despawn()
+            }
+        }
+    }
+}
+
 pub fn move_camera(
     q_player_transform: Query<&Transform, With<PlayerTile>>,
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,

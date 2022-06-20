@@ -1,36 +1,32 @@
 use bevy::prelude::*;
-use bevy::utils::Duration;
 
-const PLAYER_TILE_Z: f32 = 1.0;
-pub const PLAYER_TILE_SIZE: f32 = 64.;
+use super::PLAYER_TILE_SIZE;
+
+const LOCK_TILE_Z: f32 = 0.5;
 
 #[derive(Component)]
-pub struct PlayerTile {
-    pub firing_clock: Timer,
-}
+pub struct TicketLockPlaceholder {}
 
 #[derive(Bundle)]
-struct PlayerTileBundle {
-    player: PlayerTile,
+struct TicketLockPlaceholderBundle {
+    player: TicketLockPlaceholder,
     #[bundle]
     sprite_bundle: SpriteBundle,
 }
 
-impl PlayerTile {
+impl TicketLockPlaceholder {
     pub fn new() -> Self {
-        PlayerTile {
-            firing_clock: Timer::new(Duration::from_secs_f32(0.3), true),
-        }
+        TicketLockPlaceholder {}
     }
 
     pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
-        let player = PlayerTile::new();
+        let player = TicketLockPlaceholder::new();
 
-        let texture = asset_server.load("textures/block_core.png");
+        let texture = asset_server.load("textures/tile_lock_placeholder.png");
 
         let sprite_bundle = SpriteBundle {
             texture: texture,
-            transform: Transform::from_xyz(location.x, location.y, PLAYER_TILE_Z),
+            transform: Transform::from_xyz(location.x, location.y, LOCK_TILE_Z),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(PLAYER_TILE_SIZE, PLAYER_TILE_SIZE)),
                 ..Default::default()
@@ -38,7 +34,7 @@ impl PlayerTile {
             ..default()
         };
 
-        let player_bundle = PlayerTileBundle {
+        let player_bundle = TicketLockPlaceholderBundle {
             player,
             sprite_bundle,
         };
