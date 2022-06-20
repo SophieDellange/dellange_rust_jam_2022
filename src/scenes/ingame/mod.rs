@@ -32,6 +32,7 @@ impl BevyPlugin for Plugin {
                 .with_system(resources::spawn_bullets)
                 .with_system(resources::move_bullets)
                 .with_system(resources::check_or_bullet_collisions)
+                .with_system(resources::bullet_hits.after(resources::check_or_bullet_collisions))
                 .with_system(pet_pick_loot.after(move_pet))
                 .with_system(pet_move_loot.after(move_pet))
                 .with_system(pet_lock_loot.after(pet_move_loot))

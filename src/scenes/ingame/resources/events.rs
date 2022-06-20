@@ -42,18 +42,18 @@ pub struct BulletCollisionEvent {
 ///
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
-    q_bull: Query<Option<(Entity, &Transform, &BulletItem)>>,
-    collider_query: Query<(Entity, &Transform), With<Collider>>,
+    q_bull: Query<Option<(Entity, &Transform, &BulletItem, &Sprite)>>,
+    collider_query: Query<(Entity, &Transform, &Sprite), With<Collider>>,
     mut collision_event: EventWriter<BulletCollisionEvent>,
 ) {
     for current_bullet in q_bull.iter() {
-        if let Some((bull_entity, b_trans, bullet)) = current_bullet {
-            for (coll_entity, transform) in collider_query.iter() {
+        if let Some((bull_entity, b_trans, bullet, b_sprite)) = current_bullet {
+            for (coll_entity, transform, coll_sprite) in collider_query.iter() {
                 let collision = collide(
                     b_trans.translation,
-                    b_trans.scale.truncate(),
+                    b_sprite.custom_size.unwrap(),
                     transform.translation,
-                    transform.scale.truncate(),
+                    coll_sprite.custom_size.unwrap(),
                 );
                 if let Some(collision) = collision {
                     commands.entity(bull_entity).despawn();
@@ -66,9 +66,9 @@ pub fn check_or_bullet_collisions(
     }
 }
 
-pub fn bullet_this(
+pub fn bullet_hits(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut BlockData), With<Collider>>,
+    mut query: Query<(Entity, &mut BlockData, &mut Sprite), With<Collider>>,
     mut events: EventReader<BulletCollisionEvent>,
 ) {
     for e in events.iter() {
