@@ -23,10 +23,10 @@ pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetSer
     for (row_i, row) in map.tiles.iter().enumerate() {
         for (col_i, tile) in row.iter().enumerate() {
             // The anchor is in the center, so must readjust.
-            let tile_shift = Vec2::new(TILE_SIZE.x / 2.0, -TILE_SIZE.y / 2.0);
+            let tile_shift = Vec2::new(TILE_SIZE / 2.0, -TILE_SIZE / 2.0);
 
             let tile_location =
-                tile_shift + Vec2::new(col_i as f32 * TILE_SIZE.x, -(row_i as f32 * TILE_SIZE.y));
+                tile_shift + Vec2::new(col_i as f32 * TILE_SIZE, -(row_i as f32 * TILE_SIZE));
 
             tile.spawn(tile_location, &mut commands);
         }
@@ -36,8 +36,8 @@ pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetSer
 pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
     for _ in 0..ENEMIES_COUNT {
         let location = Vec2::new(
-            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE.x as u16)) as f32,
-            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE.x as u16)) as f32),
+            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16)) as f32,
+            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
         );
 
         Enemy::new(&asset_server).spawn(location, &mut commands);
@@ -47,8 +47,8 @@ pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
 pub fn spawn_loot(mut commands: Commands, asset_server: Res<AssetServer>) {
     for _ in 0..LOOT_COUNT {
         let loot_location = Vec2::new(
-            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE.x as u16)) as f32,
-            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE.x as u16)) as f32),
+            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16)) as f32,
+            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
         );
 
         Loot::new().spawn(loot_location, &mut commands, &asset_server);
@@ -64,7 +64,7 @@ pub fn spawn_player_and_pet(
 
     let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
 
-    Player::new().spawn(player_location, &mut commands, &asset_server);
+    PlayerTile::new().spawn(player_location, &mut commands, &asset_server);
 
     let pet_location = player_location + Vec2::new(48., 56.);
 
@@ -73,9 +73,8 @@ pub fn spawn_player_and_pet(
 
 pub fn move_player(
     keys: Res<Input<KeyCode>>,
-    mut q_player_transform: Query<&mut Transform, With<Player>>,
+    mut q_player_tiles_transform: Query<&mut Transform, With<PlayerTile>>,
 ) {
-    let mut player_transform = q_player_transform.single_mut();
     let (mut x_diff, mut y_diff) = (0., 0.);
 
     if keys.pressed(KeyCode::W) {
@@ -93,8 +92,12 @@ pub fn move_player(
 
     let normalized_diff = Vec2::new(x_diff, y_diff).normalize_or_zero() * PLAYER_MOVE_SPEED;
 
-    player_transform.translation.x = player_transform.translation.x + normalized_diff.x;
-    player_transform.translation.y = player_transform.translation.y + normalized_diff.y;
+    for mut player_tile_transform in q_player_tiles_transform.iter_mut() {
+        player_tile_transform.translation.x =
+            player_tile_transform.translation.x + normalized_diff.x;
+        player_tile_transform.translation.y =
+            player_tile_transform.translation.y + normalized_diff.y;
+    }
 }
 
 pub fn move_pet(
@@ -168,8 +171,103 @@ pub fn pet_move_loot(
     }
 }
 
+pub fn pet_lock_loot(
+    mut commands: Commands,
+    mut q: ParamSet<(
+        Query<&Transform, With<PlayerTile>>,
+        Query<&Transform, With<LootTransported>>,
+        Query<(Entity, &mut Transform), With<TicketLockPlaceholder>>,
+    )>,
+    asset_server: Res<AssetServer>,
+) {
+    // The problem of finding the available positions is actually not as simple as one would think,
+    // for several reasons (e.g. floats can't be hashed without rounding; hashing with rounding screams
+    // for errors, etc.etc).
+    //
+    // We therefore apply a st00pid simple solution:
+    //
+    // - if the loot position is within a given distance from a player tile, it has at most two potential
+    //   positions
+    // - we collect the potential positions
+    // - we filter out the occupied ones
+    // - we sort them from closes to farthest
+    // - we pick the closest
+
+    let radius = Vec2::new(TILE_SIZE, TILE_SIZE).length();
+
+    let q_loot_transform = q.p1();
+
+    if let Ok(loot_transform) = q_loot_transform.get_single() {
+        let loot_position = loot_transform.translation.truncate();
+
+        let q_player_tiles_transform = q.p0();
+
+        let player_tile_positions = q_player_tiles_transform
+            .iter()
+            .map(|transform| transform.translation.truncate())
+            .collect::<Vec<_>>();
+
+        let mut potential_positions = vec![];
+
+        // The functionally composed version is more confusing.
+        //
+        for player_tile_position in &player_tile_positions {
+            let distance_vec = loot_position - *player_tile_position;
+
+            // For simplicity, we put both positions (horizontal and vertical).
+            //
+            if distance_vec.length() < radius {
+                potential_positions.push(Vec2::new(
+                    player_tile_position.x,
+                    player_tile_position.y + (TILE_SIZE * distance_vec.y.signum()),
+                ));
+                potential_positions.push(Vec2::new(
+                    player_tile_position.x + (TILE_SIZE * distance_vec.x.signum()),
+                    player_tile_position.y,
+                ));
+            }
+        }
+
+        // Arbitrary; can be much smaller.
+        //
+        const EPSILON: f32 = 0.1;
+
+        let mut available_positions = potential_positions
+            .into_iter()
+            .filter(|potential_position| {
+                player_tile_positions.iter().any(|player_tile_position| {
+                    (*player_tile_position - *potential_position).length() > EPSILON
+                })
+            })
+            .collect::<Vec<_>>();
+
+        available_positions.sort_by(|available_pos1, available_pos2| {
+            let dist1 = (loot_position - *available_pos1).length();
+            let dist2 = (loot_position - *available_pos2).length();
+
+            dist1.partial_cmp(&dist2).unwrap()
+        });
+
+        let mut q_tile_lock_placeholder = q.p2();
+        let tile_lock_placeholder = q_tile_lock_placeholder.get_single_mut();
+
+        if let Some(best_position) = available_positions.first() {
+            if let Ok((_, mut tile_lock_placeholder)) = tile_lock_placeholder {
+                tile_lock_placeholder.translation.x = best_position.x;
+                tile_lock_placeholder.translation.y = best_position.y;
+            } else {
+                TicketLockPlaceholder::new().spawn(*best_position, &mut commands, &asset_server);
+            }
+        } else {
+            if let Ok((placeholder_id, _)) = tile_lock_placeholder {
+                commands.entity(placeholder_id).despawn()
+            }
+        }
+    }
+}
+
 pub fn move_camera(
-    q_player_transform: Query<&Transform, With<Player>>,
+    q_player_transform: Query<&Transform, With<PlayerTile>>,
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
     windows: Res<Windows>,
 ) {
