@@ -1,8 +1,8 @@
+use bevy::prelude::*;
 use bevy::utils::Duration;
-use bevy::{math::const_vec2, prelude::*};
 
 const PLAYER_TILE_Z: f32 = 1.0;
-const PLAYER_TILE_SIZE: Vec2 = const_vec2!([64., 64.]);
+const PLAYER_TILE_SIZE: f32 = 64.;
 
 #[derive(Component)]
 pub struct PlayerTile {
@@ -32,7 +32,7 @@ impl PlayerTile {
             texture: texture,
             transform: Transform::from_xyz(location.x, location.y, PLAYER_TILE_Z),
             sprite: Sprite {
-                custom_size: Some(PLAYER_TILE_SIZE),
+                custom_size: Some(Vec2::new(PLAYER_TILE_SIZE, PLAYER_TILE_SIZE)),
                 ..Default::default()
             },
             ..default()
