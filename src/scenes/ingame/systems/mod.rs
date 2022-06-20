@@ -73,9 +73,8 @@ pub fn spawn_player_and_pet(
 
 pub fn move_player(
     keys: Res<Input<KeyCode>>,
-    mut q_player_transform: Query<&mut Transform, With<PlayerTile>>,
+    mut q_player_tiles_transform: Query<&mut Transform, With<PlayerTile>>,
 ) {
-    let mut player_transform = q_player_transform.single_mut();
     let (mut x_diff, mut y_diff) = (0., 0.);
 
     if keys.pressed(KeyCode::W) {
@@ -93,8 +92,12 @@ pub fn move_player(
 
     let normalized_diff = Vec2::new(x_diff, y_diff).normalize_or_zero() * PLAYER_MOVE_SPEED;
 
-    player_transform.translation.x = player_transform.translation.x + normalized_diff.x;
-    player_transform.translation.y = player_transform.translation.y + normalized_diff.y;
+    for mut player_tile_transform in q_player_tiles_transform.iter_mut() {
+        player_tile_transform.translation.x =
+            player_tile_transform.translation.x + normalized_diff.x;
+        player_tile_transform.translation.y =
+            player_tile_transform.translation.y + normalized_diff.y;
+    }
 }
 
 pub fn move_pet(
