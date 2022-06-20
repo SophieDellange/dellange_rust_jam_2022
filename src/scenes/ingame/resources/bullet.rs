@@ -1,6 +1,6 @@
 use bevy::{math::const_vec2, prelude::*, utils::Duration};
 
-use crate::scenes::ingame::resources::player_tile::PlayerTile;
+use crate::scenes::ingame::resources::player_core_tile::PlayerCoreTile;
 
 const BULLET_SIZE: Vec2 = const_vec2!([6., 6.]);
 
@@ -62,7 +62,7 @@ pub fn move_bullets(
 }
 
 pub fn spawn_bullets(
-    mut head: Query<(&Transform, &mut PlayerTile)>,
+    mut head: Query<(&Transform, &mut PlayerCoreTile)>,
     server: Res<AssetServer>,
     time: Res<Time>,
     mut commands: Commands,

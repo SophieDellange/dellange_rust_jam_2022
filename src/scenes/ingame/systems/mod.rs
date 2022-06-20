@@ -64,16 +64,16 @@ pub fn spawn_player_and_pet(
 
     let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
 
-    PlayerTile::new().spawn(player_location, &mut commands, &asset_server);
+    PlayerCoreTile::new().spawn(player_location, &mut commands, &asset_server);
 
     let pet_location = player_location + Vec2::new(48., 56.);
 
     Pet::new().spawn(pet_location, &mut commands, &asset_server);
 }
 
-pub fn move_player(
+pub fn move_player_tiles(
     keys: Res<Input<KeyCode>>,
-    mut q_player_tiles_transform: Query<&mut Transform, With<PlayerTile>>,
+    mut q_player_tiles_transform: Query<&mut Transform, With<Player>>,
 ) {
     let (mut x_diff, mut y_diff) = (0., 0.);
 
@@ -174,9 +174,9 @@ pub fn pet_move_loot(
 pub fn pet_lock_loot(
     mut commands: Commands,
     mut q: ParamSet<(
-        Query<&Transform, With<PlayerTile>>,
+        Query<&Transform, With<Player>>,
         Query<&Transform, With<LootTransported>>,
-        Query<(Entity, &mut Transform), With<TicketLockPlaceholder>>,
+        Query<(Entity, &mut Transform), With<TileLock>>,
     )>,
     asset_server: Res<AssetServer>,
 ) {
@@ -248,26 +248,50 @@ pub fn pet_lock_loot(
             dist1.partial_cmp(&dist2).unwrap()
         });
 
-        let mut q_tile_lock_placeholder = q.p2();
-        let tile_lock_placeholder = q_tile_lock_placeholder.get_single_mut();
+        let mut q_tile_lock = q.p2();
+        let tile_lock = q_tile_lock.get_single_mut();
 
         if let Some(best_position) = available_positions.first() {
-            if let Ok((_, mut tile_lock_placeholder)) = tile_lock_placeholder {
-                tile_lock_placeholder.translation.x = best_position.x;
-                tile_lock_placeholder.translation.y = best_position.y;
+            if let Ok((_, mut tile_lock)) = tile_lock {
+                tile_lock.translation.x = best_position.x;
+                tile_lock.translation.y = best_position.y;
             } else {
-                TicketLockPlaceholder::new().spawn(*best_position, &mut commands, &asset_server);
+                TileLock::new().spawn(*best_position, &mut commands, &asset_server);
             }
         } else {
-            if let Ok((placeholder_id, _)) = tile_lock_placeholder {
-                commands.entity(placeholder_id).despawn()
+            if let Ok((lock_entity, _)) = tile_lock {
+                commands.entity(lock_entity).despawn()
             }
         }
     }
 }
 
+pub fn pet_attach_loot(
+    mut commands: Commands,
+    q_loot_lock: Query<(Entity, &mut Transform), With<TileLock>>,
+    q_loot_transported: Query<Entity, With<LootTransported>>,
+    q_mouse_buttons: Res<Input<MouseButton>>,
+    asset_server: Res<AssetServer>,
+) {
+    if let Ok((loot_lock_id, loot_transform)) = q_loot_lock.get_single() {
+        if q_mouse_buttons.just_pressed(MouseButton::Left) {
+            PlayerExtraTile::new().spawn(
+                loot_transform.translation.truncate(),
+                &mut commands,
+                &asset_server,
+            );
+
+            commands.entity(loot_lock_id).despawn();
+
+            let loot_transported_id = q_loot_transported.get_single().unwrap();
+
+            commands.entity(loot_transported_id).despawn();
+        }
+    }
+}
+
 pub fn move_camera(
-    q_player_transform: Query<&Transform, With<PlayerTile>>,
+    q_player_transform: Query<&Transform, With<PlayerCoreTile>>,
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
     windows: Res<Windows>,
 ) {
