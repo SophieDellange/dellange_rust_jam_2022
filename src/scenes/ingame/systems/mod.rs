@@ -23,10 +23,10 @@ pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetSer
     for (row_i, row) in map.tiles.iter().enumerate() {
         for (col_i, tile) in row.iter().enumerate() {
             // The anchor is in the center, so must readjust.
-            let tile_shift = Vec2::new(TILE_SIZE.x / 2.0, -TILE_SIZE.y / 2.0);
+            let tile_shift = Vec2::new(TILE_SIZE / 2.0, -TILE_SIZE / 2.0);
 
             let tile_location =
-                tile_shift + Vec2::new(col_i as f32 * TILE_SIZE.x, -(row_i as f32 * TILE_SIZE.y));
+                tile_shift + Vec2::new(col_i as f32 * TILE_SIZE, -(row_i as f32 * TILE_SIZE));
 
             tile.spawn(tile_location, &mut commands);
         }
@@ -36,8 +36,8 @@ pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetSer
 pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
     for _ in 0..ENEMIES_COUNT {
         let location = Vec2::new(
-            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE.x as u16)) as f32,
-            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE.x as u16)) as f32),
+            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16)) as f32,
+            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
         );
 
         Enemy::new(&asset_server).spawn(location, &mut commands);
@@ -47,8 +47,8 @@ pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
 pub fn spawn_loot(mut commands: Commands, asset_server: Res<AssetServer>) {
     for _ in 0..LOOT_COUNT {
         let loot_location = Vec2::new(
-            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE.x as u16)) as f32,
-            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE.x as u16)) as f32),
+            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16)) as f32,
+            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
         );
 
         Loot::new().spawn(loot_location, &mut commands, &asset_server);

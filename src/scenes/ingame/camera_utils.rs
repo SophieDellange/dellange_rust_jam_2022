@@ -13,8 +13,8 @@ pub fn camera_limits(windows: &Res<Windows>) -> (Vec2, Vec2) {
     let top_left = Vec2::new(window.width() / 2., -window.height() / 2.);
     let bottom_right = top_left
         + Vec2::new(
-            (MAP_SIZE.0 as f32 * TILE_SIZE.x) - window.width(),
-            -(MAP_SIZE.1 as f32 * TILE_SIZE.y) + window.height(),
+            (MAP_SIZE.0 as f32 * TILE_SIZE) - window.width(),
+            -(MAP_SIZE.1 as f32 * TILE_SIZE) + window.height(),
         );
 
     (top_left, bottom_right)
