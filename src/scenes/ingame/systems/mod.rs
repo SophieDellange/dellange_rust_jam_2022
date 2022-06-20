@@ -176,7 +176,7 @@ pub fn pet_lock_loot(
     mut q: ParamSet<(
         Query<&Transform, With<PlayerCoreTile>>,
         Query<&Transform, With<LootTransported>>,
-        Query<(Entity, &mut Transform), With<TicketLockPlaceholder>>,
+        Query<(Entity, &mut Transform), With<TileLock>>,
     )>,
     asset_server: Res<AssetServer>,
 ) {
@@ -248,19 +248,19 @@ pub fn pet_lock_loot(
             dist1.partial_cmp(&dist2).unwrap()
         });
 
-        let mut q_tile_lock_placeholder = q.p2();
-        let tile_lock_placeholder = q_tile_lock_placeholder.get_single_mut();
+        let mut q_tile_lock = q.p2();
+        let tile_lock = q_tile_lock.get_single_mut();
 
         if let Some(best_position) = available_positions.first() {
-            if let Ok((_, mut tile_lock_placeholder)) = tile_lock_placeholder {
-                tile_lock_placeholder.translation.x = best_position.x;
-                tile_lock_placeholder.translation.y = best_position.y;
+            if let Ok((_, mut tile_lock)) = tile_lock {
+                tile_lock.translation.x = best_position.x;
+                tile_lock.translation.y = best_position.y;
             } else {
-                TicketLockPlaceholder::new().spawn(*best_position, &mut commands, &asset_server);
+                TileLock::new().spawn(*best_position, &mut commands, &asset_server);
             }
         } else {
-            if let Ok((placeholder_id, _)) = tile_lock_placeholder {
-                commands.entity(placeholder_id).despawn()
+            if let Ok((lock_entity, _)) = tile_lock {
+                commands.entity(lock_entity).despawn()
             }
         }
     }

@@ -6,7 +6,7 @@ mod pet;
 mod player_core_tile;
 mod tile;
 mod tile_atlas;
-mod tile_lock_placeholder;
+mod tile_lock;
 
 pub use bullet::*;
 pub use enemy::*;
@@ -16,4 +16,4 @@ pub use pet::*;
 pub use player_core_tile::*;
 pub use tile::*;
 pub use tile_atlas::*;
-pub use tile_lock_placeholder::*;
+pub use tile_lock::*;

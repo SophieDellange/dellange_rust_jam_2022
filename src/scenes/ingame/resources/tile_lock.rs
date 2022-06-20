@@ -5,24 +5,24 @@ use super::PLAYER_TILE_SIZE;
 const LOCK_TILE_Z: f32 = 0.5;
 
 #[derive(Component)]
-pub struct TicketLockPlaceholder {}
+pub struct TileLock {}
 
 #[derive(Bundle)]
-struct TicketLockPlaceholderBundle {
-    player: TicketLockPlaceholder,
+struct TileLockBundle {
+    player: TileLock,
     #[bundle]
     sprite_bundle: SpriteBundle,
 }
 
-impl TicketLockPlaceholder {
+impl TileLock {
     pub fn new() -> Self {
-        TicketLockPlaceholder {}
+        TileLock {}
     }
 
     pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
-        let player = TicketLockPlaceholder::new();
+        let player = TileLock::new();
 
-        let texture = asset_server.load("textures/tile_lock_placeholder.png");
+        let texture = asset_server.load("textures/tile_lock.png");
 
         let sprite_bundle = SpriteBundle {
             texture: texture,
@@ -34,7 +34,7 @@ impl TicketLockPlaceholder {
             ..default()
         };
 
-        let player_bundle = TicketLockPlaceholderBundle {
+        let player_bundle = TileLockBundle {
             player,
             sprite_bundle,
         };
