@@ -1,4 +1,4 @@
-use super::BulletItem;
+use super::{BulletItem, Loot};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::*;
 
@@ -68,14 +68,20 @@ pub fn check_or_bullet_collisions(
 
 pub fn bullet_hits(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut BlockData), With<Collider>>,
+    mut query: Query<(Entity, &mut BlockData, &Transform), With<Collider>>,
     mut events: EventReader<BulletCollisionEvent>,
+    asset_server: Res<AssetServer>,
 ) {
     for e in events.iter() {
-        if let Ok((entity, mut block_data)) = query.get_mut(e.entity) {
+        if let Ok((entity, mut block_data, transform)) = query.get_mut(e.entity) {
             block_data.deal_damage(5);
             if !block_data.alive {
                 commands.entity(entity).despawn();
+                Loot::new().spawn(
+                    transform.translation.truncate(),
+                    &mut commands,
+                    &asset_server,
+                );
             }
         }
     }
