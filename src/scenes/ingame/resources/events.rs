@@ -68,14 +68,14 @@ pub fn check_or_bullet_collisions(
 
 pub fn bullet_hits(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut BlockData, &mut Sprite), With<Collider>>,
+    mut query: Query<(Entity, &mut BlockData), With<Collider>>,
     mut events: EventReader<BulletCollisionEvent>,
 ) {
     for e in events.iter() {
-        if let Ok(mut m) = query.get_mut(e.entity) {
-            m.1.deal_damage(5);
-            if !m.1.alive {
-                commands.entity(m.0).despawn();
+        if let Ok((entity, mut block_data)) = query.get_mut(e.entity) {
+            block_data.deal_damage(5);
+            if !block_data.alive {
+                commands.entity(entity).despawn();
             }
         }
     }
