@@ -24,15 +24,16 @@ impl BevyPlugin for Plugin {
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
-                .with_system(move_player)
+                .with_system(move_player_tiles)
                 .with_system(move_pet)
-                .with_system(move_camera.after(move_player))
-                .with_system(update_game.after(move_player))
+                .with_system(move_camera.after(move_player_tiles))
+                .with_system(update_game.after(move_player_tiles))
                 .with_system(resources::spawn_bullets)
                 .with_system(resources::move_bullets)
                 .with_system(pet_pick_loot.after(move_pet))
                 .with_system(pet_move_loot.after(move_pet))
-                .with_system(pet_lock_loot.after(pet_move_loot)),
+                .with_system(pet_lock_loot.after(pet_move_loot))
+                .with_system(pet_attach_loot.after(pet_move_loot)),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game));
     }

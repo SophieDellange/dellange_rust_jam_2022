@@ -71,9 +71,9 @@ pub fn spawn_player_and_pet(
     Pet::new().spawn(pet_location, &mut commands, &asset_server);
 }
 
-pub fn move_player(
+pub fn move_player_tiles(
     keys: Res<Input<KeyCode>>,
-    mut q_player_tiles_transform: Query<&mut Transform, With<PlayerCoreTile>>,
+    mut q_player_tiles_transform: Query<&mut Transform, With<Player>>,
 ) {
     let (mut x_diff, mut y_diff) = (0., 0.);
 
@@ -174,7 +174,7 @@ pub fn pet_move_loot(
 pub fn pet_lock_loot(
     mut commands: Commands,
     mut q: ParamSet<(
-        Query<&Transform, With<PlayerCoreTile>>,
+        Query<&Transform, With<Player>>,
         Query<&Transform, With<LootTransported>>,
         Query<(Entity, &mut Transform), With<TileLock>>,
     )>,
@@ -262,6 +262,30 @@ pub fn pet_lock_loot(
             if let Ok((lock_entity, _)) = tile_lock {
                 commands.entity(lock_entity).despawn()
             }
+        }
+    }
+}
+
+pub fn pet_attach_loot(
+    mut commands: Commands,
+    q_loot_lock: Query<(Entity, &mut Transform), With<TileLock>>,
+    q_loot_transported: Query<Entity, With<LootTransported>>,
+    q_mouse_buttons: Res<Input<MouseButton>>,
+    asset_server: Res<AssetServer>,
+) {
+    if let Ok((loot_lock_id, loot_transform)) = q_loot_lock.get_single() {
+        if q_mouse_buttons.just_pressed(MouseButton::Left) {
+            PlayerExtraTile::new().spawn(
+                loot_transform.translation.truncate(),
+                &mut commands,
+                &asset_server,
+            );
+
+            commands.entity(loot_lock_id).despawn();
+
+            let loot_transported_id = q_loot_transported.get_single().unwrap();
+
+            commands.entity(loot_transported_id).despawn();
         }
     }
 }

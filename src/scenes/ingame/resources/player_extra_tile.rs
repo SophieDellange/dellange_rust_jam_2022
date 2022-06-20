@@ -1,36 +1,31 @@
 use bevy::prelude::*;
-use bevy::utils::Duration;
 
-use super::Player;
-
-pub const PLAYER_TILE_Z: f32 = 1.0;
-pub const PLAYER_TILE_SIZE: f32 = 64.;
+use super::{
+    player_core_tile::{PLAYER_TILE_SIZE, PLAYER_TILE_Z},
+    Player,
+};
 
 #[derive(Component)]
-pub struct PlayerCoreTile {
-    pub firing_clock: Timer,
-}
+pub struct PlayerExtraTile {}
 
 #[derive(Bundle)]
-struct PlayerCoreTileBundle {
-    tile: PlayerCoreTile,
+struct PlayerExtraTileBundle {
+    tile: PlayerExtraTile,
     player: Player,
     #[bundle]
     sprite_bundle: SpriteBundle,
 }
 
-impl PlayerCoreTile {
+impl PlayerExtraTile {
     pub fn new() -> Self {
-        PlayerCoreTile {
-            firing_clock: Timer::new(Duration::from_secs_f32(0.3), true),
-        }
+        Self {}
     }
 
     pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
-        let tile = PlayerCoreTile::new();
+        let tile = PlayerExtraTile::new();
         let player = Player::new();
 
-        let texture = asset_server.load("textures/block_core.png");
+        let texture = asset_server.load("textures/block_connection.png");
 
         let sprite_bundle = SpriteBundle {
             texture: texture,
@@ -42,7 +37,7 @@ impl PlayerCoreTile {
             ..default()
         };
 
-        let player_bundle = PlayerCoreTileBundle {
+        let player_bundle = PlayerExtraTileBundle {
             tile,
             player,
             sprite_bundle,

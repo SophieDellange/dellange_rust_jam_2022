@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::PLAYER_TILE_SIZE;
+use super::player_core_tile::PLAYER_TILE_SIZE;
 
 const LOCK_TILE_Z: f32 = 0.5;
 
