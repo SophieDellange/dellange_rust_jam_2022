@@ -16,6 +16,7 @@ opt-level = 3
 dev = ['bevy/dynamic']
 
 [dependencies]
+anyhow = "^1.0"
 bevy = { version = "0.7", features = [
   "bevy_gilrs",
   "bevy_winit",
