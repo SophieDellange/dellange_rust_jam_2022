@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::{
     player_core_tile::{PLAYER_TILE_SIZE, PLAYER_TILE_Z},
-    Player,
+    LootType, Player,
 };
 
 #[derive(Component)]
@@ -21,11 +21,17 @@ impl PlayerExtraTile {
         Self {}
     }
 
-    pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
+    pub fn spawn(
+        &self,
+        loot_type: &LootType,
+        location: Vec2,
+        commands: &mut Commands,
+        asset_server: &Res<AssetServer>,
+    ) {
         let tile = PlayerExtraTile::new();
         let player = Player::new();
 
-        let texture = asset_server.load("textures/block_connection.png");
+        let texture = loot_type.player_extra_tile_texture(asset_server);
 
         let sprite_bundle = SpriteBundle {
             texture: texture,
