@@ -23,5 +23,9 @@ pub use player::*;
 pub use player_core_tile::*;
 pub use player_extra_tile::*;
 pub use tile::*;
+<<<<<<< HEAD
 pub use tile_atlas::*;
 pub use tile_lock::*;
+=======
+pub use tile_atlas::*;
+>>>>>>> Added pathfinding BROKEN
