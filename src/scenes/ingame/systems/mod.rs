@@ -51,7 +51,7 @@ pub fn spawn_loot(mut commands: Commands, asset_server: Res<AssetServer>) {
             -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
         );
 
-        Loot::new().spawn(loot_location, &mut commands, &asset_server);
+        Loot::random().spawn(loot_location, &mut commands, &asset_server);
     }
 }
 

@@ -77,7 +77,8 @@ pub fn bullet_hits(
             block_data.deal_damage(5);
             if !block_data.alive {
                 commands.entity(entity).despawn();
-                Loot::new().spawn(
+
+                Loot::random().spawn(
                     transform.translation.truncate(),
                     &mut commands,
                     &asset_server,
