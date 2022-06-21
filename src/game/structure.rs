@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 pub struct BlobBody<T>(HashMap<(i8, i8), T>);
 
-type BlockType = (i8, i8);
+type Coordinates = (i8, i8);
 
 impl<T> BlobBody<T>
 where
@@ -14,25 +14,68 @@ where
         blob
     }
 
-    pub fn insert(&mut self, index: BlockType, element: T) {
+    pub fn insert(&mut self, index: Coordinates, element: T) {
         self.0.insert(index, element);
     }
 
-    pub fn detach(&mut self, block: BlockType) -> Option<HashMap<(i8, i8), T>> {
+    pub fn detach(&mut self, block: Coordinates) -> Option<HashMap<(i8, i8), T>> {
         if block == (0, 0) {
             return Some(self.0.drain().collect());
         }
 
-        if let Some(removed) = self.0.remove(&block) {
-            return Some([(block, removed)].iter().cloned().collect());
+        if self.0.contains_key(&block) {
+            let removed = self.0.remove_entry(&block).unwrap();
+
+            let dropped = self.find_alive_blocks();
+
+            let mut dropped = dropped
+                .iter()
+                .flat_map(|x| self.0.remove_entry(x))
+                .collect::<HashMap<(i8, i8), T>>();
+
+            dropped.insert(removed.0, removed.1);
+
+            //return Some([(block, removed)].iter().cloned().collect());
+            return Some(dropped);
         }
 
         None
     }
 
-    pub fn has_neighboor(&self, block: BlockType) -> HashSet<BlockType> {
-        let directions: [(BlockType); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
-        let mut found = HashSet::new::<BlockType>();
+    pub fn find_alive_blocks(&self) -> HashSet<Coordinates> {
+        let mut connected = HashSet::<Coordinates>::new();
+        let mut find_neighboor = self.has_neighboor(&(0, 0));
+
+        loop {
+            let mut found = find_neighboor
+                .iter()
+                .map(|p| self.has_neighboor(p))
+                .flatten()
+                .collect::<HashSet<Coordinates>>();
+
+            let new_dots = found
+                .difference(&connected)
+                .cloned()
+                .collect::<HashSet<Coordinates>>();
+
+            if new_dots.len() < 1 {
+                break;
+            }
+
+            find_neighboor.clear();
+            new_dots.iter().for_each(|p| {
+                find_neighboor.insert(*p);
+                connected.insert(*p);
+            });
+        }
+
+        connected
+    }
+
+    /// returns neighboor coordinates
+    pub fn has_neighboor(&self, block: &Coordinates) -> HashSet<Coordinates> {
+        let directions: [Coordinates; 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
+        let mut found = HashSet::<Coordinates>::new();
 
         for p in directions.iter() {
             let check = (block.0 + p.0, block.1 + p.1);
@@ -73,7 +116,14 @@ mod test {
     #[test]
     fn test_neighboor_finder() {
         let blob = default_blob();
-        blob.has_neighboor()
+        let part = blob.has_neighboor(&(0, 0));
+        assert_eq!(1, part.len());
+        assert_eq!(&(1, 0), part.iter().next().unwrap());
+
+        let part = blob.has_neighboor(&(1, 0));
+        assert_eq!(2, part.len());
+        assert!(part.contains(&(0, 0)));
+        assert!(part.contains(&(2, 0)));
     }
 
     #[test]
