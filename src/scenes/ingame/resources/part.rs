@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 //as in monster part
 #[derive(Component, PartialEq, Clone)]
@@ -28,39 +28,26 @@ impl PartBlob {
 
         // Find out what is left after removing the single piece
         if let Some(removed) = self.0.remove(&block) {
-            // here goes the recursive connection-finding part
+            let to_be_retained = self.find_connected(&(0, 0));
 
-            /// *suggestion*: consider the valid connection only on 4 sides, not diagonals.
-            ///   [_]
-            ///   [*]   << connected
-            ///      [_]   << disconnected
-            ///
             return Some([(block, removed)].iter().cloned().collect());
         }
 
         None
     }
-}
-/*
-pub fn check_valid_init(part_core: Part, parts: &mut Vec<Part>) -> Vec<Part> {
-    let mut connected = Vec::new();
 
-    //then check for connected parts
-    check_valid(part_core, parts, &mut connected);
-
-    connected
-}
-
-pub fn check_valid(current: Part, remaining: &mut Vec<Part>, connecteds: &mut Vec<Part>) {
-    for part in current.connected_parts.iter() {
-        match remaining.iter().position(|element| element == part) {
-            Some(pos) => Some(connecteds.push(remaining.remove(pos))),
-            None => None,
-        };
-
-        check_valid(part.clone(), remaining, connecteds);
+    /// Considers the valid connection only on 4 sides, not diagonals.
+    //   [_]
+    //   [*]   << connected
+    //      [_]   << disconnected
+    //
+    pub fn find_connected(&self, center: &(i8, i8)) -> Option<HashSet<(i8, i8)>> {
+        self.0
+            .iter()
+            .fold(HashSet::new::<(i8, i8)>(), |mut p, entry| p)
+            .collect()
     }
-}*/
+}
 
 #[cfg(test)]
 mod test {
@@ -83,6 +70,14 @@ mod test {
         let mut blob = default_blob();
         let dropped = blob.detach((3, 0)).unwrap();
         assert_eq!(1, dropped.len());
+        assert_eq!(3, blob.0.len());
+    }
+
+    #[test]
+    fn test_connections() {
+        let blob = default_blob();
+        assert_eq!(4, blob.0.len());
+        assert_eq!(4, blob.find_connected(&(0, 0)).unwrap().len());
     }
 
     #[test]
@@ -91,6 +86,7 @@ mod test {
         let mut blob = default_blob();
         let dropped = blob.detach((1, 0)).unwrap();
         assert_eq!(3, dropped.len());
+        assert_eq!(1, blob.0.len());
     }
 
     fn default_blob() -> PartBlob {
