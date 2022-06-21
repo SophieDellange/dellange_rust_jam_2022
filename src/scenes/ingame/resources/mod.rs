@@ -1,6 +1,8 @@
 mod bullet;
 mod enemy;
+mod events;
 mod loot;
+mod loot_type;
 mod map;
 mod pet;
 mod player;
@@ -12,7 +14,9 @@ mod tile_lock;
 
 pub use bullet::*;
 pub use enemy::*;
+pub use events::*;
 pub use loot::*;
+pub use loot_type::*;
 pub use map::*;
 pub use pet::*;
 pub use player::*;
