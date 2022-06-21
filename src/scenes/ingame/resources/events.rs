@@ -1,4 +1,4 @@
-use super::{BulletItem, Loot};
+use super::{BulletItem, Loot, BULLET_SIZE, BULLET_SPEED};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::*;
 
@@ -35,10 +35,6 @@ pub struct BulletCollisionEvent {
 
 ///
 /// Note: could check for bullet_hits in bullet_move instead of having a sparate system.
-/// I believe that the bullet can jump over a Collider, if the speed is high enough:
-///  in that case its difficult to catch a missed Collider here,
-///   instead
-///  its doable during the "move" calculation.
 ///
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
@@ -48,10 +44,14 @@ pub fn check_or_bullet_collisions(
 ) {
     for current_bullet in q_bull.iter() {
         if let Some((bull_entity, b_trans, bullet, b_sprite)) = current_bullet {
+            let bullet_hitbox_start =
+                b_trans.translation - Vec3::new(BULLET_SPEED - BULLET_SIZE.x, 0., 0.);
+            let bullet_hitbox_size = Vec2::new(BULLET_SPEED + BULLET_SIZE.x, BULLET_SIZE.y);
+
             for (coll_entity, transform, coll_sprite) in collider_query.iter() {
                 let collision = collide(
-                    b_trans.translation,
-                    b_sprite.custom_size.unwrap(),
+                    bullet_hitbox_start,
+                    bullet_hitbox_size,
                     transform.translation,
                     coll_sprite.custom_size.unwrap(),
                 );
