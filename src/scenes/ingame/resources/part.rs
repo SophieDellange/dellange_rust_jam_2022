@@ -30,6 +30,11 @@ impl PartBlob {
         if let Some(removed) = self.0.remove(&block) {
             // here goes the recursive connection-finding part
 
+            /// *suggestion*: consider the valid connection only on 4 sides, not diagonals.
+            ///   [_]
+            ///   [*]   << connected
+            ///      [_]   << disconnected
+            ///
             return Some([(block, removed)].iter().cloned().collect());
         }
 
