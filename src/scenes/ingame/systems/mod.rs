@@ -51,7 +51,7 @@ pub fn spawn_loot(mut commands: Commands, asset_server: Res<AssetServer>) {
             -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
         );
 
-        Loot::new().spawn(loot_location, &mut commands, &asset_server);
+        Loot::random().spawn(loot_location, &mut commands, &asset_server);
     }
 }
 
@@ -269,21 +269,22 @@ pub fn pet_lock_loot(
 pub fn pet_attach_loot(
     mut commands: Commands,
     q_loot_lock: Query<(Entity, &mut Transform), With<TileLock>>,
-    q_loot_transported: Query<Entity, With<LootTransported>>,
+    q_loot_transported: Query<(Entity, &Loot), With<LootTransported>>,
     q_mouse_buttons: Res<Input<MouseButton>>,
     asset_server: Res<AssetServer>,
 ) {
     if let Ok((loot_lock_id, loot_transform)) = q_loot_lock.get_single() {
         if q_mouse_buttons.just_pressed(MouseButton::Left) {
+            let (loot_transported_id, loot) = q_loot_transported.get_single().unwrap();
+
             PlayerExtraTile::new().spawn(
+                &loot.loot_type,
                 loot_transform.translation.truncate(),
                 &mut commands,
                 &asset_server,
             );
 
             commands.entity(loot_lock_id).despawn();
-
-            let loot_transported_id = q_loot_transported.get_single().unwrap();
 
             commands.entity(loot_transported_id).despawn();
         }
