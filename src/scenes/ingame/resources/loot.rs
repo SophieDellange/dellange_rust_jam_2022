@@ -8,7 +8,7 @@ pub struct Loot {}
 
 #[derive(Bundle)]
 struct LootBundle {
-    player: Loot,
+    loot: Loot,
     #[bundle]
     sprite_bundle: SpriteBundle,
 }
@@ -19,7 +19,7 @@ impl Loot {
     }
 
     pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
-        let player = Loot::new();
+        let loot = Loot::new();
 
         let texture = asset_server.load("textures/loot_gold_coin.png");
 
@@ -34,7 +34,7 @@ impl Loot {
         };
 
         let player_bundle = LootBundle {
-            player,
+            loot,
             sprite_bundle,
         };
 
