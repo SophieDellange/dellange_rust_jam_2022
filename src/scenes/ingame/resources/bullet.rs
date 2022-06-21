@@ -72,7 +72,7 @@ pub fn spawn_bullets(
     time: Res<Time>,
     mut commands: Commands,
 ) {
-    for (spawn_location, mut player) in head.iter_mut() {
+    if let Ok((spawn_location, mut player)) = head.get_single_mut() {
         player.firing_clock.tick(time.delta());
         if player.firing_clock.finished() {
             let bullet = Bullet::new(&server);
