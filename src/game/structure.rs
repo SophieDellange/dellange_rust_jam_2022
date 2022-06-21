@@ -30,6 +30,20 @@ where
         None
     }
 
+    pub fn has_neighboor(&self, block: BlockType) -> HashSet<BlockType> {
+        let directions: [(BlockType); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
+        let mut found = HashSet::new::<BlockType>();
+
+        for p in directions.iter() {
+            let check = (block.0 + p.0, block.1 + p.1);
+
+            if self.0.contains_key(&check) {
+                found.insert(check);
+            }
+        }
+        found
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -57,10 +71,9 @@ mod test {
     }
 
     #[test]
-    fn test_connections() {
+    fn test_neighboor_finder() {
         let blob = default_blob();
-        assert_eq!(4, blob.len());
-        //assert_eq!(4, blob.find_connected(&(0, 0)).unwrap().len());
+        blob.has_neighboor()
     }
 
     #[test]
