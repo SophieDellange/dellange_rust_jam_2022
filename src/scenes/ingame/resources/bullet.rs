@@ -2,7 +2,8 @@ use bevy::{math::const_vec2, prelude::*, utils::Duration};
 
 use crate::scenes::ingame::resources::player_core_tile::PlayerCoreTile;
 
-const BULLET_SIZE: Vec2 = const_vec2!([6., 6.]);
+pub const BULLET_SIZE: Vec2 = const_vec2!([6., 6.]);
+pub const BULLET_SPEED: f32 = 14.;
 
 #[derive(Component)]
 pub struct Bullet {
@@ -42,7 +43,7 @@ impl Bullet {
             })
             .insert(BulletItem {
                 direction,
-                speed: 14.0,
+                speed: BULLET_SPEED,
                 life_time: Timer::new(Duration::from_secs_f32(2.0), false),
             });
     }
