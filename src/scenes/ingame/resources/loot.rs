@@ -30,8 +30,8 @@ impl Loot {
 
     pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
         let loot = Loot::random();
+        let texture = loot.loot_type.texture(&asset_server);
 
-        let texture = loot.loot_type.loot_texture(&asset_server);
 
         let sprite_bundle = SpriteBundle {
             texture: texture,
