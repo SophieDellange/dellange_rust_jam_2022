@@ -1,5 +1,4 @@
 use bevy::prelude::{Plugin as BevyPlugin, *};
-use bevy_inspector_egui::RegisterInspectable;
 
 mod camera_utils;
 mod components;
