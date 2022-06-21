@@ -24,7 +24,7 @@ impl Bullet {
     }
 
     pub fn spawn(&self, location: &Transform, direction: Vec2, commands: &mut Commands) {
-        /// Starts from the producer position
+        // Starts from the producer position
         let mut new_transf = location.clone();
         //let spawn_loc = new_transf.translation.truncate() + direction;
 
