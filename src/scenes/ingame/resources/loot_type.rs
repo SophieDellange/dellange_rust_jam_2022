@@ -35,4 +35,18 @@ impl LootType {
             _ => unreachable!(),
         }
     }
+
+    pub fn player_extra_tile_texture(&self, asset_server: &AssetServer) -> Handle<Image> {
+        let basename = match self {
+            LootType::GoldCoin => "monster_part_0.png",
+            LootType::Bomb => "monster_part_1.png",
+            LootType::Torch => "monster_part_2.png",
+            // Repeated - needs another texture
+            LootType::KeyBlue => "monster_part_2.png",
+        };
+
+        let full_path = Path::new(TEXTURES_PATH).join(basename);
+
+        asset_server.load(full_path)
+    }
 }

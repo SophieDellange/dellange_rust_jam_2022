@@ -3,8 +3,7 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
 
 use dellange_rust_jam_2022::{
-    config,
-    game::{self, InspectableType, ReflectedType},
+    config, game,
     resources::{self, prelude::*},
     scenes,
 };
