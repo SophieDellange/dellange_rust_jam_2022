@@ -5,6 +5,7 @@ use rand::{thread_rng, Rng};
 
 const TEXTURES_PATH: &str = "textures";
 
+
 pub enum LootType {
     GoldCoin,
     Bomb,
@@ -14,6 +15,7 @@ pub enum LootType {
 
 impl LootType {
     pub fn texture(&self, asset_server: &Res<AssetServer>) -> Handle<Image> {
+
         let basename = match self {
             LootType::GoldCoin => "loot_gold_coin.png",
             LootType::Bomb => "loot_bomb.png",
@@ -35,4 +37,5 @@ impl LootType {
             _ => unreachable!(),
         }
     }
+
 }
