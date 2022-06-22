@@ -1,4 +1,4 @@
-use super::{BulletItem, Loot, BULLET_SIZE, BULLET_SPEED};
+use super::{BulletItem, Loot, Player, BULLET_SIZE, BULLET_SPEED};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::*;
 
@@ -38,7 +38,7 @@ pub struct BulletCollisionEvent {
 ///
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
-    q_bull: Query<(Entity, &Transform, &BulletItem, &Sprite)>,
+    q_bull: Query<(Entity, &Transform, &BulletItem, &Sprite), With<Player>>,
     collider_query: Query<(Entity, &Transform, &Sprite), With<Collider>>,
     mut collision_event: EventWriter<BulletCollisionEvent>,
 ) {

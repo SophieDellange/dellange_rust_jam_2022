@@ -1,11 +1,21 @@
-use bevy::{math::const_vec2, prelude::*, utils::Duration};
+use bevy::{
+    math::const_vec2, prelude::*, render::camera::Camera2d, sprite::collide_aabb::collide,
+    utils::Duration,
+};
+use rand::prelude::SliceRandom;
 
 use crate::scenes::ingame::resources::player_core_tile::PlayerCoreTile;
 
-use super::Player;
+use super::{Enemy, Player};
 
 pub const BULLET_SIZE: Vec2 = const_vec2!([6., 6.]);
 pub const BULLET_SPEED: f32 = 14.;
+
+pub const ENEMY_BULLET_INTERVAL: f32 = 1.;
+
+// If the enemy bullet timer is not shared, it could be a Local, however, preinitializing a local seems
+// to be very clunky (when a system has a large signature).
+pub struct EnemyBulletTimer(pub Timer);
 
 #[derive(Component)]
 pub struct Bullet {
@@ -106,5 +116,49 @@ pub fn spawn_player_bullets(
                 &mut commands,
             );
         }
+    }
+}
+
+pub fn spawn_enemy_bullets(
+    mut commands: Commands,
+    q_camera: Query<&GlobalTransform, With<Camera2d>>,
+    q_enemies: Query<(&Transform, &Sprite), With<Enemy>>,
+    windows: Res<Windows>,
+    mut enemy_bullet_timer: ResMut<EnemyBulletTimer>,
+    time: Res<Time>,
+    asset_server: Res<AssetServer>,
+) {
+    let camera_location = q_camera.single().translation;
+    let window = windows.get_primary().unwrap();
+    let camera_size = Vec2::new(window.width(), window.height());
+
+    let on_screen_enemy_locations = q_enemies
+        .iter()
+        .filter_map(|(enemy_transform, enemy_sprite)| {
+            let enemy_location = enemy_transform.translation;
+            let enemy_size = enemy_sprite.custom_size.unwrap();
+
+            collide(enemy_location, enemy_size, camera_location, camera_size)
+                .map(|_| enemy_transform)
+        })
+        .collect::<Vec<_>>();
+
+    enemy_bullet_timer.0.tick(time.delta());
+
+    if enemy_bullet_timer.0.finished() {
+        let enemy_location = on_screen_enemy_locations.choose(&mut rand::thread_rng());
+
+        if let Some(enemy_location) = enemy_location {
+            let bullet = Bullet::new(&asset_server);
+
+            bullet.spawn(
+                enemy_location,
+                Vec2::new(-1.0, 0.0),
+                Enemy::new(),
+                &mut commands,
+            );
+        }
+
+        enemy_bullet_timer.0.reset();
     }
 }
