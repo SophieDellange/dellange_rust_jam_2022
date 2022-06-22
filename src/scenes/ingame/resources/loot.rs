@@ -32,7 +32,6 @@ impl Loot {
         let loot = Loot::random();
         let texture = loot.loot_type.texture(&asset_server);
 
-
         let sprite_bundle = SpriteBundle {
             texture: texture,
             transform: Transform::from_xyz(location.x, location.y, LOOT_Z),
