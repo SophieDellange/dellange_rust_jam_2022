@@ -49,6 +49,7 @@ where
 
     pub fn find_alive_blocks(&self) -> HashSet<Coordinates> {
         let mut connected = HashSet::<Coordinates>::new();
+        connected.insert((0, 0));
         let mut find_neighboor = self.has_neighboor(&(0, 0));
 
         loop {
@@ -142,8 +143,8 @@ mod test {
         // We drop the middle-element near the heart, all three elements should fall
         let mut blob = default_blob();
         let dropped = blob.detach((1, 0)).unwrap();
-        assert_eq!(3, dropped.len());
         assert_eq!(1, blob.len());
+        assert_eq!(3, dropped.len());
     }
 
     fn default_blob() -> BlobBody<i32> {
