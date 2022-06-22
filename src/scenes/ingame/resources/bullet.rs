@@ -89,7 +89,7 @@ pub fn move_bullets(
     }
 }
 
-pub fn spawn_bullets(
+pub fn spawn_player_bullets(
     mut head: Query<(&Transform, &mut PlayerCoreTile)>,
     server: Res<AssetServer>,
     time: Res<Time>,

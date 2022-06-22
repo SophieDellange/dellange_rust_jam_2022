@@ -28,7 +28,7 @@ impl BevyPlugin for Plugin {
                 .with_system(move_pet)
                 .with_system(move_camera.after(move_player_tiles))
                 .with_system(update_game.after(move_player_tiles))
-                .with_system(resources::spawn_bullets)
+                .with_system(resources::spawn_player_bullets)
                 .with_system(resources::move_bullets)
                 .with_system(resources::check_or_bullet_collisions)
                 .with_system(resources::bullet_hits.after(resources::check_or_bullet_collisions))
