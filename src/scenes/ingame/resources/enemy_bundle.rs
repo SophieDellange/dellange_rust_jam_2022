@@ -29,10 +29,7 @@ impl EnemyBundle {
                 ..default()
             })
             .insert(Collider {})
-            .insert(BlockData {
-                health: 12,
-                ..default()
-            })
+            .insert(BlockData::new(12))
             .insert(Enemy::new());
     }
 }

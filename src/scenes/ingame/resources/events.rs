@@ -11,16 +11,14 @@ pub struct BlockData {
     pub alive: bool,
 }
 
-impl Default for BlockData {
-    fn default() -> Self {
+impl BlockData {
+    pub fn new(health: u8) -> Self {
         Self {
-            health: Default::default(),
+            health,
             alive: true,
         }
     }
-}
 
-impl BlockData {
     pub fn deal_damage(&mut self, amount: u8) {
         self.health = self.health.saturating_sub(amount);
         if self.health < 1 {
