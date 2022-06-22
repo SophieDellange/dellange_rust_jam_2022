@@ -73,7 +73,10 @@ pub fn spawn_player_and_pet(
 
 pub fn move_player_tiles(
     keys: Res<Input<KeyCode>>,
-    mut q_player_tiles_transform: Query<&mut Transform, With<Player>>,
+    mut q_player_tiles_transform: Query<
+        &mut Transform,
+        Or<(With<PlayerCoreTile>, With<PlayerExtraTile>)>,
+    >,
 ) {
     let (mut x_diff, mut y_diff) = (0., 0.);
 
@@ -174,7 +177,7 @@ pub fn pet_move_loot(
 pub fn pet_lock_loot(
     mut commands: Commands,
     mut q: ParamSet<(
-        Query<&Transform, With<Player>>,
+        Query<&Transform, Or<(With<PlayerCoreTile>, With<PlayerExtraTile>)>>,
         Query<&Transform, With<LootTransported>>,
         Query<(Entity, &mut Transform), With<TileLock>>,
     )>,

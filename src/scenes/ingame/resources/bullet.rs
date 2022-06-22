@@ -2,6 +2,8 @@ use bevy::{math::const_vec2, prelude::*, utils::Duration};
 
 use crate::scenes::ingame::resources::player_core_tile::PlayerCoreTile;
 
+use super::Player;
+
 pub const BULLET_SIZE: Vec2 = const_vec2!([6., 6.]);
 pub const BULLET_SPEED: f32 = 14.;
 
@@ -17,13 +19,31 @@ pub struct BulletItem {
     life_time: Timer,
 }
 
+#[derive(Bundle)]
+pub struct BulletBundle<C: Component> {
+    owner: C,
+    bullet_item: BulletItem,
+}
+
+impl<C: Component> BulletBundle<C> {
+    pub fn new(owner: C, bullet_item: BulletItem) -> Self {
+        Self { owner, bullet_item }
+    }
+}
+
 impl Bullet {
     pub fn new(asset_server: &Res<AssetServer>) -> Self {
         let texture = asset_server.load("textures/laserGreen1.png");
         Self { texture }
     }
 
-    pub fn spawn(&self, location: &Transform, direction: Vec2, commands: &mut Commands) {
+    pub fn spawn<C: Component>(
+        &self,
+        location: &Transform,
+        direction: Vec2,
+        owner: C,
+        commands: &mut Commands,
+    ) {
         // Starts from the producer position
         let mut new_transf = location.clone();
         //let spawn_loc = new_transf.translation.truncate() + direction;
@@ -41,11 +61,14 @@ impl Bullet {
                 },
                 ..default()
             })
-            .insert(BulletItem {
-                direction,
-                speed: BULLET_SPEED,
-                life_time: Timer::new(Duration::from_secs_f32(2.0), false),
-            });
+            .insert_bundle(BulletBundle::new(
+                owner,
+                BulletItem {
+                    direction,
+                    speed: BULLET_SPEED,
+                    life_time: Timer::new(Duration::from_secs_f32(2.0), false),
+                },
+            ));
     }
 }
 
@@ -76,7 +99,12 @@ pub fn spawn_bullets(
         player.firing_clock.tick(time.delta());
         if player.firing_clock.finished() {
             let bullet = Bullet::new(&server);
-            bullet.spawn(spawn_location, Vec2::new(1.0, 0.0), &mut commands);
+            bullet.spawn(
+                spawn_location,
+                Vec2::new(1.0, 0.0),
+                Player::new(),
+                &mut commands,
+            );
         }
     }
 }
