@@ -6,9 +6,12 @@ mod constants;
 mod resources;
 mod services;
 mod systems;
+mod ui;
 
 use self::{resources::BlockData, systems::*};
 use crate::game;
+
+use ui::spawn_health_bar;
 
 pub struct Plugin;
 
@@ -20,7 +23,8 @@ impl BevyPlugin for Plugin {
                 .with_system(generate_map_and_tiles)
                 .with_system(spawn_enemies)
                 .with_system(spawn_loot)
-                .with_system(spawn_player_and_pet),
+                .with_system(spawn_player_and_pet)
+                .with_system(spawn_health_bar.after(spawn_player_and_pet)),
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
