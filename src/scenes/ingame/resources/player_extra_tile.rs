@@ -2,8 +2,10 @@ use bevy::prelude::*;
 
 use super::{
     player_core_tile::{PLAYER_TILE_SIZE, PLAYER_TILE_Z},
-    LootType, Player,
+    BlockData, Collider, LootType, Player,
 };
+
+const EXTRA_TILE_HEALTH: u8 = 1;
 
 #[derive(Component)]
 pub struct PlayerExtraTile {}
@@ -12,6 +14,8 @@ pub struct PlayerExtraTile {}
 struct PlayerExtraTileBundle {
     tile: PlayerExtraTile,
     player: Player,
+    collider: Collider,
+    block_data: BlockData,
     #[bundle]
     sprite_bundle: SpriteBundle,
 }
@@ -31,6 +35,9 @@ impl PlayerExtraTile {
         let tile = PlayerExtraTile::new();
         let player = Player::new();
 
+        let collider = Collider {};
+        let block_data = BlockData::new(EXTRA_TILE_HEALTH);
+
         let texture = loot_type.player_extra_tile_texture(asset_server);
 
         let sprite_bundle = SpriteBundle {
@@ -38,7 +45,7 @@ impl PlayerExtraTile {
             transform: Transform::from_xyz(location.x, location.y, PLAYER_TILE_Z),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(PLAYER_TILE_SIZE, PLAYER_TILE_SIZE)),
-                ..Default::default()
+                ..default()
             },
             ..default()
         };
@@ -46,6 +53,8 @@ impl PlayerExtraTile {
         let player_bundle = PlayerExtraTileBundle {
             tile,
             player,
+            collider,
+            block_data,
             sprite_bundle,
         };
 
