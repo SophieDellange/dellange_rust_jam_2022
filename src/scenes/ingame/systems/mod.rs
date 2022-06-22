@@ -40,7 +40,7 @@ pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
             -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
         );
 
-        Enemy::new(&asset_server).spawn(location, &mut commands);
+        EnemyBundle::new(&asset_server).spawn(location, &mut commands);
     }
 }
 

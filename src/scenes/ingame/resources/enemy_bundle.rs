@@ -6,11 +6,11 @@ const ENEMIES_Z: f32 = 1.0;
 const ENEMIES_SIZE: Vec2 = const_vec2!([64., 64.]);
 
 #[derive(Component)]
-pub struct Enemy {
+pub struct EnemyBundle {
     texture: Handle<Image>,
 }
 
-impl Enemy {
+impl EnemyBundle {
     pub fn new(asset_server: &Res<AssetServer>) -> Self {
         let texture = asset_server.load("textures/enemy_barnacle.png");
 
