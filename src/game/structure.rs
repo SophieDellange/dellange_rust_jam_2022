@@ -18,7 +18,7 @@ where
         self.0.insert(index, element);
     }
 
-    pub fn detach(&mut self, block: Coordinates) -> Option<HashMap<(i8, i8), T>> {
+    pub fn detach(&mut self, block: Coordinates) -> Option<HashMap<Coordinates, T>> {
         if block == (0, 0) {
             return Some(self.0.drain().collect());
         }
@@ -26,16 +26,21 @@ where
         if self.0.contains_key(&block) {
             let removed = self.0.remove_entry(&block).unwrap();
 
-            let dropped = self.find_alive_blocks();
+            let conserve = self.find_alive_blocks();
 
-            let mut dropped = dropped
+            let dead_blocks = self
+                .0
                 .iter()
-                .flat_map(|x| self.0.remove_entry(x))
-                .collect::<HashMap<(i8, i8), T>>();
+                .filter(|&p| !conserve.contains(&p.0))
+                .map(|x| x.0.clone())
+                .collect::<HashSet<Coordinates>>();
+
+            let mut dropped = dead_blocks
+                .iter()
+                .flat_map(|r| self.0.remove_entry(r))
+                .collect::<HashMap<Coordinates, T>>();
 
             dropped.insert(removed.0, removed.1);
-
-            //return Some([(block, removed)].iter().cloned().collect());
             return Some(dropped);
         }
 
@@ -47,7 +52,7 @@ where
         let mut find_neighboor = self.has_neighboor(&(0, 0));
 
         loop {
-            let mut found = find_neighboor
+            let found = find_neighboor
                 .iter()
                 .map(|p| self.has_neighboor(p))
                 .flatten()
@@ -104,6 +109,12 @@ mod test {
         let dropped = blob.detach((0, 0)).unwrap();
         assert_eq!(4, dropped.len());
     }
+    #[test]
+    fn find_alive_blocks() {
+        let blob = default_blob();
+        let all = blob.find_alive_blocks();
+        assert_eq!(all.len(), blob.len());
+    }
 
     #[test]
     fn kill_a_leaf() {
@@ -131,8 +142,8 @@ mod test {
         // We drop the middle-element near the heart, all three elements should fall
         let mut blob = default_blob();
         let dropped = blob.detach((1, 0)).unwrap();
-        //assert_eq!(3, dropped.len());
-        //assert_eq!(1, blob.len());
+        assert_eq!(3, dropped.len());
+        assert_eq!(1, blob.len());
     }
 
     fn default_blob() -> BlobBody<i32> {
