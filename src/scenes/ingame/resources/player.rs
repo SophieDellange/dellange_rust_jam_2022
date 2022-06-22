@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-// Marks a tile that belongs to the player
+// Marks something that belongs to the player
 #[derive(Component)]
 pub struct Player {}
 
