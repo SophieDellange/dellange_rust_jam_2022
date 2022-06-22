@@ -4,10 +4,7 @@ pub struct BlobBody<T>(HashMap<(i8, i8), T>);
 
 type Coordinates = (i8, i8);
 
-impl<T> BlobBody<T>
-where
-    T: Clone,
-{
+impl<T> BlobBody<T> {
     pub fn new(hearth_item: T) -> Self {
         let mut blob = Self(HashMap::new());
         blob.insert((0, 0), hearth_item);
