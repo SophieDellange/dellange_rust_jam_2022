@@ -36,11 +36,11 @@ pub struct BulletCollisionEvent {
 ///
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
-    q_bull: Query<(Entity, &Transform, &BulletItem, &Sprite), With<Player>>,
+    q_bull: Query<(Entity, &Transform), With<Player>>,
     collider_query: Query<(Entity, &Transform, &Sprite), With<Collider>>,
     mut collision_event: EventWriter<BulletCollisionEvent>,
 ) {
-    for (bull_entity, b_trans, _bullet, _b_sprite) in q_bull.iter() {
+    for (bull_entity, b_trans) in q_bull.iter() {
         let bullet_hitbox_start =
             b_trans.translation - Vec3::new(BULLET_SPEED - BULLET_SIZE.x, 0., 0.);
         let bullet_hitbox_size = Vec2::new(BULLET_SPEED + BULLET_SIZE.x, BULLET_SIZE.y);
