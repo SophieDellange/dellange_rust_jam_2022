@@ -26,10 +26,12 @@ impl BevyPlugin for Plugin {
         .add_system_set(
             SystemSet::on_enter(game::State::Play)
                 .with_system(spawn_camera)
+                .with_system(spawn_ui)
                 .with_system(generate_map_and_tiles)
                 .with_system(spawn_enemies)
                 .with_system(spawn_loot)
-                .with_system(spawn_player_and_pet),
+                .with_system(spawn_player_and_pet)
+                .with_system(spawn_scoreboard),
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
