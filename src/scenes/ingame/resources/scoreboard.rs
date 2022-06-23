@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct Score(u32);
+pub struct Score(pub u32);
 
 #[derive(Bundle)]
 pub struct ScoreBoard {
