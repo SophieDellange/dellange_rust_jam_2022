@@ -27,11 +27,13 @@ impl BevyPlugin for Plugin {
         .add_system_set(
             SystemSet::on_enter(game::State::Play)
                 .with_system(spawn_camera)
+                .with_system(spawn_ui)
                 .with_system(generate_map_and_tiles)
                 .with_system(spawn_enemies)
                 .with_system(spawn_loot)
                 .with_system(spawn_player_and_pet)
-                .with_system(initialize_audio_channels),
+                .with_system(initialize_audio_channels)
+                .with_system(spawn_scoreboard),
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
@@ -44,6 +46,7 @@ impl BevyPlugin for Plugin {
                 .with_system(resources::move_bullets)
                 .with_system(resources::check_or_bullet_collisions)
                 .with_system(resources::bullet_hits.after(resources::check_or_bullet_collisions))
+                .with_system(resources::update_scoreboard.after(resources::bullet_hits))
                 .with_system(pet_pick_loot.after(move_pet))
                 .with_system(pet_move_loot.after(move_pet))
                 .with_system(pet_lock_loot.after(pet_move_loot))

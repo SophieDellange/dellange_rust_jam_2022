@@ -1,7 +1,7 @@
 #[allow(clippy::wildcard_imports)]
 use crate::scenes::ingame::constants::*;
 
-use super::{Enemy, Loot, Player, BULLET_SIZE, BULLET_SPEED};
+use super::{Enemy, Loot, Player, Score, BULLET_SIZE, BULLET_SPEED,ENEMY_KILLED_POINTS};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 use bevy_kira_audio::{Audio, AudioChannel};
@@ -76,6 +76,7 @@ pub fn check_or_bullet_collisions(
 pub fn bullet_hits(
     mut commands: Commands,
     mut q_collided: Query<(Entity, &mut BlockData, &Transform, Option<&Player>), With<Collider>>,
+    mut q_score: Query<&mut Score>,
     mut events: EventReader<BulletCollisionEvent>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
@@ -102,10 +103,15 @@ pub fn bullet_hits(
                     &mut commands,
                     &asset_server,
                 );
+                
+                // Note that this does not update the text; that's done via change detection.
+                //
+                q_score.single_mut().0 += ENEMY_KILLED_POINTS;
             }
         }
     }
 }
+
 
 pub fn health_based_status(mut query: Query<(&mut Sprite, &BlockData)>) {
     for (mut sprite, block) in query.iter_mut() {
@@ -113,5 +119,12 @@ pub fn health_based_status(mut query: Query<(&mut Sprite, &BlockData)>) {
             let red_amt = f32::from(block.health) / f32::from(block.max_health) * -1.0;
             sprite.color = Color::rgb(1.0 + red_amt.sin(), red_amt.tan(), red_amt.tan());
         }
+    }
+}
+
+pub fn update_scoreboard(mut q_score_text: Query<(&mut Text, &Score), Changed<Score>>) {
+    if let Ok((mut text, Score(score))) = q_score_text.get_single_mut() {
+        text.sections[0].value = format!("{}", score);
+
     }
 }

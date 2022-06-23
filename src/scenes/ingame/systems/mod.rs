@@ -17,6 +17,10 @@ pub fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
     commands.spawn_bundle(camera);
 }
 
+pub fn spawn_ui(mut commands: Commands) {
+    commands.spawn_bundle(UiCameraBundle::default());
+}
+
 pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
     let tile_atlas = TileAtlas::new(&asset_server);
     let map_generator = MapGenerator::new(tile_atlas, MAP_SIZE.0, MAP_SIZE.1);
@@ -71,6 +75,11 @@ pub fn spawn_player_and_pet(
     let pet_location = player_location + Vec2::new(48., 56.);
 
     Pet::new().spawn(pet_location, &mut commands, &asset_server);
+}
+
+pub fn spawn_scoreboard(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let scoreboard = ScoreBoard::new(&asset_server);
+    commands.spawn_bundle(scoreboard);
 }
 
 pub fn move_player_tiles(
