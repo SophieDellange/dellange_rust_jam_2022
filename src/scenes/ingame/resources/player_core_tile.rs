@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::utils::Duration;
 
-use super::Player;
+use super::{BlockData, Player};
 
 pub const PLAYER_TILE_Z: f32 = 1.0;
 pub const PLAYER_TILE_SIZE: f32 = 64.;
@@ -15,6 +15,7 @@ pub struct PlayerCoreTile {
 struct PlayerCoreTileBundle {
     tile: PlayerCoreTile,
     player: Player,
+    stats: BlockData,
     #[bundle]
     sprite_bundle: SpriteBundle,
 }
@@ -46,6 +47,7 @@ impl PlayerCoreTile {
             tile,
             player,
             sprite_bundle,
+            stats: BlockData::new(20),
         };
 
         commands.spawn_bundle(player_bundle);

@@ -23,8 +23,7 @@ impl BevyPlugin for Plugin {
                 .with_system(generate_map_and_tiles)
                 .with_system(spawn_enemies)
                 .with_system(spawn_loot)
-                .with_system(spawn_player_and_pet)
-                .with_system(spawn_health_bar.after(spawn_player_and_pet)),
+                .with_system(spawn_player_and_pet),
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
@@ -39,7 +38,8 @@ impl BevyPlugin for Plugin {
                 .with_system(pet_pick_loot.after(move_pet))
                 .with_system(pet_move_loot.after(move_pet))
                 .with_system(pet_lock_loot.after(pet_move_loot))
-                .with_system(pet_attach_loot.after(pet_move_loot)),
+                .with_system(pet_attach_loot.after(pet_move_loot))
+                .with_system(resources::health_based_status.after(resources::bullet_hits)),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game))
         .add_event::<resources::BulletCollisionEvent>()

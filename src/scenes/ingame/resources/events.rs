@@ -6,8 +6,10 @@ use bevy::sprite::collide_aabb::*;
 pub struct Collider;
 
 #[derive(Component, Debug, Reflect)]
+#[reflect(Component)]
 pub struct BlockData {
     pub health: u8,
+    pub max_health: u8,
     pub alive: bool,
 }
 
@@ -15,12 +17,21 @@ impl Default for BlockData {
     fn default() -> Self {
         Self {
             health: Default::default(),
+            max_health: Default::default(),
             alive: true,
         }
     }
 }
 
 impl BlockData {
+    pub fn new(with_health: u8) -> Self {
+        Self {
+            health: with_health,
+            max_health: with_health,
+            alive: true,
+        }
+    }
+
     pub fn deal_damage(&mut self, amount: u8) {
         self.health = self.health.saturating_sub(amount);
         if self.health < 1 {
@@ -84,6 +95,15 @@ pub fn bullet_hits(
                     &asset_server,
                 );
             }
+        }
+    }
+}
+
+pub fn health_based_status(mut query: Query<(&Transform, &mut Sprite, &BlockData)>) {
+    for (transform, mut sprite, block) in query.iter_mut() {
+        if block.health < block.max_health {
+            let red_amt: f32 = block.health as f32 / block.max_health as f32 * -1.0;
+            sprite.color = Color::rgb(1., red_amt, red_amt);
         }
     }
 }

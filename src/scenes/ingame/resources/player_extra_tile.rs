@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::{
     player_core_tile::{PLAYER_TILE_SIZE, PLAYER_TILE_Z},
-    LootType, Player,
+    BlockData, LootType, Player,
 };
 
 #[derive(Component)]
@@ -12,6 +12,7 @@ pub struct PlayerExtraTile {}
 struct PlayerExtraTileBundle {
     tile: PlayerExtraTile,
     player: Player,
+    stats: BlockData,
     #[bundle]
     sprite_bundle: SpriteBundle,
 }
@@ -47,6 +48,7 @@ impl PlayerExtraTile {
             tile,
             player,
             sprite_bundle,
+            stats: BlockData::new(10),
         };
 
         commands.spawn_bundle(player_bundle);
