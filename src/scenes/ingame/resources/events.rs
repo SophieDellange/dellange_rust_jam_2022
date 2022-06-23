@@ -3,7 +3,7 @@ use crate::scenes::ingame::constants::*;
 use super::{BulletItem, Loot, BULLET_SIZE, BULLET_SPEED};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::*;
-use bevy_kira_audio::Audio;
+use bevy_kira_audio::{Audio, AudioChannel};
 
 #[derive(Component)]
 pub struct Collider;
@@ -90,11 +90,22 @@ pub fn bullet_hits(
     for e in events.iter() {
         if let Ok((entity, mut block_data, transform)) = query.get_mut(e.entity) {
             block_data.deal_damage(BASIC_BULLET_DAMAGE);
+            let hit_audio = asset_server.load(SOUND_HIT_ENEMY);
 
-            audio.play(asset_server.load(HIT_AUDIO));
+            audio.play_in_channel(
+                hit_audio,
+                &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+            );
 
             if !block_data.alive {
                 commands.entity(entity).despawn();
+
+                let hit_audio = asset_server.load(SOUND_ENEMY_GROWL);
+
+                audio.play_in_channel(
+                    hit_audio,
+                    &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+                );
 
                 Loot::random().spawn(
                     transform.translation.truncate(),

@@ -1,4 +1,5 @@
 use bevy::{prelude::*, render::camera::Camera2d};
+use bevy_kira_audio::{Audio, AudioChannel};
 use rand::{thread_rng, Rng};
 
 use super::{
@@ -330,4 +331,19 @@ pub fn update_game() {
 
 pub fn teardown_game() {
     // println!("teardown");
+}
+
+pub fn initialize_audio_channels(audio: Res<Audio>) {
+    audio.set_volume_in_channel(
+        DEFAULT_MUSIC_VOLUME,
+        &AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned()),
+    );
+    audio.set_volume_in_channel(
+        DEFAULT_EFFECT_VOLUME,
+        &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+    );
+    audio.set_volume_in_channel(
+        DEFAULT_INTERFACE_VOLUME,
+        &AudioChannel::new(AUDIO_INTERFACE_CHANNEL.to_owned()),
+    );
 }
