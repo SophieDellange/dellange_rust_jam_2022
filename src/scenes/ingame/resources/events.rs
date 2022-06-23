@@ -1,14 +1,15 @@
+#[allow(clippy::wildcard_imports)]
 use crate::scenes::ingame::constants::*;
 
-use super::{BulletItem, Enemy, Loot, Player, BULLET_SIZE, BULLET_SPEED};
+use super::{Enemy, Loot, Player, BULLET_SIZE, BULLET_SPEED};
 use bevy::prelude::*;
-use bevy::sprite::collide_aabb::*;
+use bevy::sprite::collide_aabb::collide;
 use bevy_kira_audio::{Audio, AudioChannel};
 
 #[derive(Component)]
 pub struct Collider;
 
-#[derive(Component, Debug, Reflect)]
+#[derive(Component, Debug, Default, Reflect)]
 #[reflect(Component)]
 pub struct BlockData {
     pub health: u8,
@@ -38,7 +39,7 @@ pub struct BulletCollisionEvent {
 }
 
 ///
-/// Note: could check for bullet_hits in bullet_move instead of having a sparate system.
+/// Note: could check for `bullet_hits` in `bullet_move` instead of having a sparate system.
 ///
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
@@ -66,7 +67,7 @@ pub fn check_or_bullet_collisions(
                 commands.entity(bull_entity).despawn();
                 collision_event.send(BulletCollisionEvent {
                     entity: coll_entity,
-                })
+                });
             }
         }
     }
@@ -88,21 +89,19 @@ pub fn bullet_hits(
                 &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
             );
 
-            if !block_data.alive {
+            if !block_data.alive && is_player.is_none() {
                 commands.entity(entity).despawn();
 
-                if is_player.is_none() {
-                    audio.play_in_channel(
-                        asset_server.load(SOUND_ENEMY_GROWL),
-                        &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
-                    );
+                audio.play_in_channel(
+                    asset_server.load(SOUND_ENEMY_GROWL),
+                    &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+                );
 
-                    Loot::random().spawn(
-                        transform.translation.truncate(),
-                        &mut commands,
-                        &asset_server,
-                    );
-                }
+                Loot::random().spawn(
+                    transform.translation.truncate(),
+                    &mut commands,
+                    &asset_server,
+                );
             }
         }
     }
@@ -111,7 +110,7 @@ pub fn bullet_hits(
 pub fn health_based_status(mut query: Query<(&mut Sprite, &BlockData)>) {
     for (mut sprite, block) in query.iter_mut() {
         if block.health < block.max_health {
-            let red_amt: f32 = block.health as f32 / block.max_health as f32 * -1.0;
+            let red_amt = f32::from(block.health) / f32::from(block.max_health) * -1.0;
             sprite.color = Color::rgb(1.0 + red_amt.sin(), red_amt.tan(), red_amt.tan());
         }
     }

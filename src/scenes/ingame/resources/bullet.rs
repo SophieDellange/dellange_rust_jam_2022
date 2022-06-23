@@ -22,6 +22,7 @@ pub struct Bullet {
     texture: Handle<Image>,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Component)]
 pub struct BulletItem {
     direction: Vec2,
@@ -29,6 +30,7 @@ pub struct BulletItem {
     life_time: Timer,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Bundle)]
 pub struct BulletBundle<C: Component> {
     owner: C,
@@ -55,7 +57,7 @@ impl Bullet {
         commands: &mut Commands,
     ) {
         // Starts from the producer position
-        let mut new_transf = location.clone();
+        let mut new_transf = *location;
         //let spawn_loc = new_transf.translation.truncate() + direction;
 
         //new_transf.translation = Vec3::new(spawn_loc.x, spawn_loc.x, location.translation.z);

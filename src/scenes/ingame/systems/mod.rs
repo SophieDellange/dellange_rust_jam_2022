@@ -2,6 +2,7 @@ use bevy::{prelude::*, render::camera::Camera2d};
 use bevy_kira_audio::{Audio, AudioChannel};
 use rand::{thread_rng, Rng};
 
+#[allow(clippy::wildcard_imports)]
 use super::{
     camera_utils::*, components::LootTransported, constants::*, resources::*, services::*,
 };
@@ -37,8 +38,8 @@ pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetSer
 pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
     for _ in 0..ENEMIES_COUNT {
         let location = Vec2::new(
-            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16)) as f32,
-            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
+            f32::from(thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16))),
+            -f32::from(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16))),
         );
 
         EnemyBundle::new(&asset_server).spawn(location, &mut commands);
@@ -97,10 +98,10 @@ pub fn move_player_tiles(
     let normalized_diff = Vec2::new(x_diff, y_diff).normalize_or_zero() * PLAYER_MOVE_SPEED;
 
     for mut player_tile_transform in q_player_tiles_transform.iter_mut() {
-        player_tile_transform.translation.x =
-            player_tile_transform.translation.x + normalized_diff.x;
-        player_tile_transform.translation.y =
-            player_tile_transform.translation.y + normalized_diff.y;
+        player_tile_transform.translation.x += normalized_diff.x;
+            //player_tile_transform.translation.x ;
+        player_tile_transform.translation.y += normalized_diff.y;
+            //player_tile_transform.translation.y ;
     }
 }
 
@@ -174,6 +175,9 @@ pub fn pet_move_loot(
         loot_transported.translation.y = pet_location.y;
     }
 }
+// Arbitrary; can be much smaller.
+//
+const EPSILON: f32 = 0.1;
 
 pub fn pet_lock_loot(
     mut commands: Commands,
@@ -232,9 +236,6 @@ pub fn pet_lock_loot(
             }
         }
 
-        // Arbitrary; can be much smaller.
-        //
-        const EPSILON: f32 = 0.1;
 
         let mut available_positions = potential_positions
             .into_iter()
@@ -262,10 +263,8 @@ pub fn pet_lock_loot(
             } else {
                 TileLock::new().spawn(*best_position, &mut commands, &asset_server);
             }
-        } else {
-            if let Ok((lock_entity, _)) = tile_lock {
-                commands.entity(lock_entity).despawn()
-            }
+        } else if let Ok((lock_entity, _)) = tile_lock {
+            commands.entity(lock_entity).despawn();
         }
     }
 }

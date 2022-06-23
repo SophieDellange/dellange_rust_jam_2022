@@ -8,8 +8,8 @@ mod constants;
 mod resources;
 mod services;
 mod systems;
-mod ui;
 
+#[allow(clippy::wildcard_imports)]
 use self::{
     resources::{BlockData, EnemyBulletTimer, ENEMY_BULLET_INTERVAL},
     systems::*,
