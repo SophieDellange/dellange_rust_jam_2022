@@ -1,6 +1,6 @@
 use crate::scenes::ingame::constants::*;
 
-use super::{BulletItem, Loot, BULLET_SIZE, BULLET_SPEED};
+use super::{BulletItem, Enemy, Loot, Player, BULLET_SIZE, BULLET_SPEED};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::*;
 use bevy_kira_audio::{Audio, AudioChannel};
@@ -14,16 +14,6 @@ pub struct BlockData {
     pub health: u8,
     pub max_health: u8,
     pub alive: bool,
-}
-
-impl Default for BlockData {
-    fn default() -> Self {
-        Self {
-            health: Default::default(),
-            max_health: Default::default(),
-            alive: true,
-        }
-    }
 }
 
 impl BlockData {
@@ -52,29 +42,31 @@ pub struct BulletCollisionEvent {
 ///
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
-    q_bull: Query<Option<(Entity, &Transform, &BulletItem, &Sprite)>>,
-    collider_query: Query<(Entity, &Transform, &Sprite), With<Collider>>,
+    q_bull: Query<(Entity, &Transform, Option<&Player>), Or<(With<Player>, With<Enemy>)>>,
+    collider_query: Query<
+        (Entity, &Transform, &Sprite, Option<&Player>),
+        (With<Collider>, Or<(With<Player>, With<Enemy>)>),
+    >,
     mut collision_event: EventWriter<BulletCollisionEvent>,
 ) {
-    for current_bullet in q_bull.iter() {
-        if let Some((bull_entity, b_trans, _bullet, _b_sprite)) = current_bullet {
-            let bullet_hitbox_start =
-                b_trans.translation - Vec3::new(BULLET_SPEED - BULLET_SIZE.x, 0., 0.);
-            let bullet_hitbox_size = Vec2::new(BULLET_SPEED + BULLET_SIZE.x, BULLET_SIZE.y);
+    for (bull_entity, b_trans, b_from_player) in q_bull.iter() {
+        let bullet_hitbox_start =
+            b_trans.translation - Vec3::new(BULLET_SPEED - BULLET_SIZE.x, 0., 0.);
+        let bullet_hitbox_size = Vec2::new(BULLET_SPEED + BULLET_SIZE.x, BULLET_SIZE.y);
 
-            for (coll_entity, transform, coll_sprite) in collider_query.iter() {
-                let collision = collide(
-                    bullet_hitbox_start,
-                    bullet_hitbox_size,
-                    transform.translation,
-                    coll_sprite.custom_size.unwrap(),
-                );
-                if collision.is_some() {
-                    commands.entity(bull_entity).despawn();
-                    collision_event.send(BulletCollisionEvent {
-                        entity: coll_entity,
-                    })
-                }
+        for (coll_entity, transform, coll_sprite, coll_is_player) in collider_query.iter() {
+            let collision = collide(
+                bullet_hitbox_start,
+                bullet_hitbox_size,
+                transform.translation,
+                coll_sprite.custom_size.unwrap(),
+            );
+
+            if collision.is_some() && (b_from_player.is_some() ^ coll_is_player.is_some()) {
+                commands.entity(bull_entity).despawn();
+                collision_event.send(BulletCollisionEvent {
+                    entity: coll_entity,
+                })
             }
         }
     }
@@ -82,36 +74,35 @@ pub fn check_or_bullet_collisions(
 
 pub fn bullet_hits(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut BlockData, &Transform), With<Collider>>,
+    mut q_collided: Query<(Entity, &mut BlockData, &Transform, Option<&Player>), With<Collider>>,
     mut events: EventReader<BulletCollisionEvent>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
 ) {
     for e in events.iter() {
-        if let Ok((entity, mut block_data, transform)) = query.get_mut(e.entity) {
+        if let Ok((entity, mut block_data, transform, is_player)) = q_collided.get_mut(e.entity) {
             block_data.deal_damage(BASIC_BULLET_DAMAGE);
-            let hit_audio = asset_server.load(SOUND_HIT_ENEMY);
 
             audio.play_in_channel(
-                hit_audio,
+                asset_server.load(SOUND_HIT_ENEMY),
                 &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
             );
 
             if !block_data.alive {
                 commands.entity(entity).despawn();
 
-                let hit_audio = asset_server.load(SOUND_ENEMY_GROWL);
+                if is_player.is_none() {
+                    audio.play_in_channel(
+                        asset_server.load(SOUND_ENEMY_GROWL),
+                        &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+                    );
 
-                audio.play_in_channel(
-                    hit_audio,
-                    &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
-                );
-
-                Loot::random().spawn(
-                    transform.translation.truncate(),
-                    &mut commands,
-                    &asset_server,
-                );
+                    Loot::random().spawn(
+                        transform.translation.truncate(),
+                        &mut commands,
+                        &asset_server,
+                    );
+                }
             }
         }
     }

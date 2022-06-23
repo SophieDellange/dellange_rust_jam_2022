@@ -1,5 +1,6 @@
 mod bullet;
 mod enemy;
+mod enemy_bundle;
 mod events;
 mod loot;
 mod loot_type;
@@ -14,6 +15,7 @@ mod tile_lock;
 
 pub use bullet::*;
 pub use enemy::*;
+pub use enemy_bundle::*;
 pub use events::*;
 pub use loot::*;
 pub use loot_type::*;
