@@ -1,6 +1,9 @@
+use crate::scenes::ingame::constants::*;
+
 use super::{BulletItem, Loot, BULLET_SIZE, BULLET_SPEED};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::*;
+use bevy_kira_audio::Audio;
 
 #[derive(Component)]
 pub struct Collider;
@@ -82,10 +85,14 @@ pub fn bullet_hits(
     mut query: Query<(Entity, &mut BlockData, &Transform), With<Collider>>,
     mut events: EventReader<BulletCollisionEvent>,
     asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     for e in events.iter() {
         if let Ok((entity, mut block_data, transform)) = query.get_mut(e.entity) {
-            block_data.deal_damage(5);
+            block_data.deal_damage(BASIC_BULLET_DAMAGE);
+
+            audio.play(asset_server.load(HIT_AUDIO));
+
             if !block_data.alive {
                 commands.entity(entity).despawn();
 
@@ -99,11 +106,11 @@ pub fn bullet_hits(
     }
 }
 
-pub fn health_based_status(mut query: Query<(&Transform, &mut Sprite, &BlockData)>) {
-    for (transform, mut sprite, block) in query.iter_mut() {
+pub fn health_based_status(mut query: Query<(&mut Sprite, &BlockData)>) {
+    for (mut sprite, block) in query.iter_mut() {
         if block.health < block.max_health {
             let red_amt: f32 = block.health as f32 / block.max_health as f32 * -1.0;
-            sprite.color = Color::rgb(1., red_amt, red_amt);
+            sprite.color = Color::rgb(1.0 + red_amt.sin(), red_amt.tan(), red_amt.tan());
         }
     }
 }
