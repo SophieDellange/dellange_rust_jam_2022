@@ -336,6 +336,18 @@ pub fn move_camera(
     }
 }
 
+pub fn move_enemies(mut q_enemies: Query<(&mut Transform, &mut RandomMovement)>, time: Res<Time>) {
+    for (mut enemy_transform, mut movement) in q_enemies.iter_mut() {
+        movement.timer.tick(time.delta());
+
+        enemy_transform.translation += movement.direction * ENEMIES_SPEED;
+
+        if movement.timer.finished() {
+            movement.renew();
+        }
+    }
+}
+
 pub fn update_game() {
     // println!("update");
 }
