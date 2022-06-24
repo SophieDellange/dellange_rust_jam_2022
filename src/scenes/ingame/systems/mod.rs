@@ -63,8 +63,8 @@ pub fn spawn_enemies_tsunami( mut commands: Commands, audio: Res<Audio>, asset_s
 
     for _ in 0..=enemies_amount {
         let location = Vec2::new(
-            f32::from(thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16))),
-            -f32::from(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16))),
+            f32::from(thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE.abs() as u16))),
+            -f32::from(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE.abs() as u16))),
         );
 
         EnemyBundle::spawn(location, &mut commands, difficulty ,&asset_server);
@@ -82,7 +82,7 @@ pub fn spawn_loot(mut commands: Commands, asset_server: Res<AssetServer>) {
             -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
         );
 
-        Loot::random().spawn(loot_location, &mut commands, &asset_server);
+        Loot::spawn(loot_location, &mut commands, &asset_server);
     }
 }
 
@@ -95,11 +95,11 @@ pub fn spawn_player_and_pet(
 
     let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
 
-    PlayerCoreTile::new().spawn(player_location, &mut commands, &asset_server);
+    PlayerCoreTile::spawn(player_location, &mut commands, &asset_server);
 
     let pet_location = player_location + Vec2::new(48., 56.);
 
-    Pet::new().spawn(pet_location, &mut commands, &asset_server);
+    Pet::spawn(pet_location, &mut commands, &asset_server);
 }
 
 pub fn spawn_scoreboard(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -133,9 +133,7 @@ pub fn move_player_tiles(
 
     for mut player_tile_transform in q_player_tiles_transform.iter_mut() {
         player_tile_transform.translation.x += normalized_diff.x;
-            //player_tile_transform.translation.x ;
         player_tile_transform.translation.y += normalized_diff.y;
-            //player_tile_transform.translation.y ;
     }
 }
 
@@ -314,7 +312,7 @@ pub fn pet_attach_loot(
         if q_mouse_buttons.just_pressed(MouseButton::Left) {
             let (loot_transported_id, loot) = q_loot_transported.get_single().unwrap();
 
-            PlayerExtraTile::new().spawn(
+            PlayerExtraTile::spawn(
                 &loot.loot_type,
                 loot_transform.translation.truncate(),
                 &mut commands,

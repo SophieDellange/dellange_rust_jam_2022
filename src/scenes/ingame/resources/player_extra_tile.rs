@@ -1,3 +1,6 @@
+// This is due to #[derive(Bundle)]  issue https://github.com/bevyengine/bevy/issues/4601
+#![allow(clippy::forget_non_drop)]
+
 use bevy::prelude::*;
 
 use super::{
@@ -26,7 +29,6 @@ impl PlayerExtraTile {
     }
 
     pub fn spawn(
-        &self,
         loot_type: &LootType,
         location: Vec2,
         commands: &mut Commands,
@@ -41,7 +43,7 @@ impl PlayerExtraTile {
         let texture = loot_type.player_extra_tile_texture(asset_server);
 
         let sprite_bundle = SpriteBundle {
-            texture: texture,
+            texture,
             transform: Transform::from_xyz(location.x, location.y, PLAYER_TILE_Z),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(PLAYER_TILE_SIZE, PLAYER_TILE_SIZE)),
