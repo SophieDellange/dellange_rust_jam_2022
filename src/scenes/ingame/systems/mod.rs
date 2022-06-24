@@ -46,7 +46,7 @@ pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
             -f32::from(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16))),
         );
 
-        EnemyBundle::new(&asset_server).spawn(location, &mut commands);
+        EnemyBundle::spawn(location, &mut commands, &asset_server);
     }
 }
 
@@ -333,6 +333,18 @@ pub fn move_camera(
         camera_translation.y = (camera_translation.y + player_translation.y
             - nopan_area_bottom_right.y)
             .max(camera_limit_bottom_right.y);
+    }
+}
+
+pub fn move_enemies(mut q_enemies: Query<(&mut Transform, &mut RandomMovement)>, time: Res<Time>) {
+    for (mut enemy_transform, mut movement) in q_enemies.iter_mut() {
+        movement.timer.tick(time.delta());
+
+        enemy_transform.translation += movement.direction * ENEMIES_SPEED;
+
+        if movement.timer.finished() {
+            movement.renew();
+        }
     }
 }
 
