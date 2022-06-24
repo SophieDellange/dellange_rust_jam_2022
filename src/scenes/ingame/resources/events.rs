@@ -1,9 +1,7 @@
 #[allow(clippy::wildcard_imports)]
 use crate::scenes::ingame::constants::*;
 
-use super::{
-    BulletItem, Enemy, Loot, Player, Score, BULLET_SIZE, BULLET_SPEED, ENEMY_KILLED_POINTS,
-};
+use super::{BulletItem, Loot, Player, Score, BULLET_SIZE, BULLET_SPEED, ENEMY_KILLED_POINTS};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 use bevy_kira_audio::{Audio, AudioChannel};
@@ -46,10 +44,7 @@ pub struct BulletCollisionEvent {
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
     q_bull: Query<(Entity, &Transform, Option<&Player>), With<BulletItem>>,
-    collider_query: Query<
-        (Entity, &Transform, &Sprite, Option<&Player>),
-        (With<Collider>, Or<(With<Player>, With<Enemy>)>),
-    >,
+    collider_query: Query<(Entity, &Transform, &Sprite, Option<&Player>), With<Collider>>,
     mut collision_event: EventWriter<BulletCollisionEvent>,
 ) {
     for (bull_entity, b_trans, b_from_player) in q_bull.iter() {
