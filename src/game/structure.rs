@@ -28,8 +28,8 @@ impl<T> BlobBody<T> {
             let dead_blocks = self
                 .0
                 .iter()
-                .filter(|&p| !conserve.contains(&p.0))
-                .map(|x| x.0.clone())
+                .filter(|&p| !conserve.contains(p.0))
+                .map(|x| *x.0)
                 .collect::<HashSet<Coordinates>>();
 
             let mut dropped = dead_blocks
@@ -52,8 +52,7 @@ impl<T> BlobBody<T> {
         loop {
             let found = find_neighboor
                 .iter()
-                .map(|p| self.has_neighboor(p))
-                .flatten()
+                .flat_map(|p| self.has_neighboor(p))
                 .collect::<HashSet<Coordinates>>();
 
             let new_dots = found
@@ -61,7 +60,7 @@ impl<T> BlobBody<T> {
                 .cloned()
                 .collect::<HashSet<Coordinates>>();
 
-            if new_dots.len() < 1 {
+            if new_dots.is_empty() {
                 break;
             }
 

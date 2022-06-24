@@ -24,7 +24,7 @@ impl Pet {
         let texture = asset_server.load("textures/hook.png");
 
         let sprite_bundle = SpriteBundle {
-            texture: texture,
+            texture,
             transform: Transform::from_xyz(location.x, location.y, PET_Z),
             sprite: Sprite {
                 custom_size: Some(PET_SIZE),

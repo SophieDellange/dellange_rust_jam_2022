@@ -1,7 +1,7 @@
 #[allow(clippy::wildcard_imports)]
 use crate::scenes::ingame::constants::*;
 
-use super::{Enemy, Loot, Player, Score, BULLET_SIZE, BULLET_SPEED,ENEMY_KILLED_POINTS};
+use super::{BulletItem, Loot, Player, Score, BULLET_SIZE, BULLET_SPEED, ENEMY_KILLED_POINTS};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 use bevy_kira_audio::{Audio, AudioChannel};
@@ -43,11 +43,8 @@ pub struct BulletCollisionEvent {
 ///
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
-    q_bull: Query<(Entity, &Transform, Option<&Player>), Or<(With<Player>, With<Enemy>)>>,
-    collider_query: Query<
-        (Entity, &Transform, &Sprite, Option<&Player>),
-        (With<Collider>, Or<(With<Player>, With<Enemy>)>),
-    >,
+    q_bull: Query<(Entity, &Transform, Option<&Player>), With<BulletItem>>,
+    collider_query: Query<(Entity, &Transform, &Sprite, Option<&Player>), With<Collider>>,
     mut collision_event: EventWriter<BulletCollisionEvent>,
 ) {
     for (bull_entity, b_trans, b_from_player) in q_bull.iter() {
@@ -103,7 +100,7 @@ pub fn bullet_hits(
                     &mut commands,
                     &asset_server,
                 );
-                
+
                 // Note that this does not update the text; that's done via change detection.
                 //
                 q_score.single_mut().0 += ENEMY_KILLED_POINTS;
@@ -111,7 +108,6 @@ pub fn bullet_hits(
         }
     }
 }
-
 
 pub fn health_based_status(mut query: Query<(&mut Sprite, &BlockData)>) {
     for (mut sprite, block) in query.iter_mut() {
@@ -125,6 +121,5 @@ pub fn health_based_status(mut query: Query<(&mut Sprite, &BlockData)>) {
 pub fn update_scoreboard(mut q_score_text: Query<(&mut Text, &Score), Changed<Score>>) {
     if let Ok((mut text, Score(score))) = q_score_text.get_single_mut() {
         text.sections[0].value = format!("{}", score);
-
     }
 }
