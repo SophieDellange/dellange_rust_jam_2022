@@ -1,5 +1,3 @@
-
-
 use bevy::{prelude::*, render::camera::Camera2d};
 use bevy_kira_audio::{Audio, AudioChannel};
 use rand::{thread_rng, Rng};
@@ -22,7 +20,6 @@ pub fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
 pub fn spawn_ui(mut commands: Commands) {
     commands.spawn_bundle(UiCameraBundle::default());
 }
-
 
 pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
     let tile_atlas = TileAtlas::new(&asset_server);
@@ -50,16 +47,21 @@ pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
             -f32::from(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16))),
         );
 
-        EnemyBundle::spawn(location, &mut commands, None ,&asset_server);
+        EnemyBundle::spawn(location, &mut commands, None, &asset_server);
     }
 }
 
 #[allow(clippy::cast_possible_truncation)]
-pub fn spawn_enemies_tsunami( mut commands: Commands, audio: Res<Audio>, asset_server: Res<AssetServer>, timer: Res<Time>){
+pub fn spawn_enemies_tsunami(
+    mut commands: Commands,
+    audio: Res<Audio>,
+    asset_server: Res<AssetServer>,
+    timer: Res<Time>,
+) {
+    let difficulty =
+        Some(timer.seconds_since_startup() as f32 / DIFFICULTY_RAMP_UP_EVERY_NTH_SECONDS);
 
-    let difficulty = Some(timer.seconds_since_startup() as f32 / DIFFICULTY_RAMP_UP_EVERY_NTH_SECONDS);
-
-    let enemies_amount= thread_rng().gen_range(0..ENEMIES_COUNT);
+    let enemies_amount = thread_rng().gen_range(0..ENEMIES_COUNT);
 
     for _ in 0..=enemies_amount {
         let location = Vec2::new(
@@ -67,11 +69,14 @@ pub fn spawn_enemies_tsunami( mut commands: Commands, audio: Res<Audio>, asset_s
             -f32::from(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16))),
         );
 
-        EnemyBundle::spawn(location, &mut commands, difficulty ,&asset_server);
+        EnemyBundle::spawn(location, &mut commands, difficulty, &asset_server);
     }
 
     if enemies_amount > 0 {
-        audio.play_in_channel(asset_server.load(SOUND_ENEMY_GROWL), &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()));
+        audio.play_in_channel(
+            asset_server.load(SOUND_ENEMY_GROWL),
+            &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+        );
     }
 }
 
@@ -95,7 +100,7 @@ pub fn spawn_player_and_pet(
 
     let player_location = Vec2::new(window.width() / 5., -window.height() / 2.);
 
-    PlayerCoreTile::new().spawn(player_location, &mut commands, &asset_server);
+    PlayerCoreTile::spawn(player_location, &mut commands, &asset_server);
 
     let pet_location = player_location + Vec2::new(48., 56.);
 
@@ -133,9 +138,9 @@ pub fn move_player_tiles(
 
     for mut player_tile_transform in q_player_tiles_transform.iter_mut() {
         player_tile_transform.translation.x += normalized_diff.x;
-            //player_tile_transform.translation.x ;
+        //player_tile_transform.translation.x ;
         player_tile_transform.translation.y += normalized_diff.y;
-            //player_tile_transform.translation.y ;
+        //player_tile_transform.translation.y ;
     }
 }
 
@@ -270,7 +275,6 @@ pub fn pet_lock_loot(
             }
         }
 
-
         let mut available_positions = potential_positions
             .into_iter()
             .filter(|potential_position| {
@@ -377,12 +381,8 @@ pub fn teardown_game() {
 }
 
 pub fn initialize_audio_channels(audio: Res<Audio>, assets: Res<AssetServer>) {
-
     let music_chan = AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned());
-    audio.set_volume_in_channel(
-        DEFAULT_MUSIC_VOLUME,
-        &music_chan,
-    );
+    audio.set_volume_in_channel(DEFAULT_MUSIC_VOLUME, &music_chan);
     audio.set_volume_in_channel(
         DEFAULT_EFFECT_VOLUME,
         &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
@@ -392,7 +392,5 @@ pub fn initialize_audio_channels(audio: Res<Audio>, assets: Res<AssetServer>) {
         &AudioChannel::new(AUDIO_INTERFACE_CHANNEL.to_owned()),
     );
 
-
-    audio.play_looped_in_channel(
-            assets.load(MUSIC_MAIN_THEME), &music_chan);
+    audio.play_looped_in_channel(assets.load(MUSIC_MAIN_THEME), &music_chan);
 }
