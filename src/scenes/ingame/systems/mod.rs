@@ -356,10 +356,12 @@ pub fn teardown_game() {
     // println!("teardown");
 }
 
-pub fn initialize_audio_channels(audio: Res<Audio>) {
+pub fn initialize_audio_channels(audio: Res<Audio>, assets: Res<AssetServer>) {
+
+    let music_chan = AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned());
     audio.set_volume_in_channel(
         DEFAULT_MUSIC_VOLUME,
-        &AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned()),
+        &music_chan,
     );
     audio.set_volume_in_channel(
         DEFAULT_EFFECT_VOLUME,
@@ -369,4 +371,8 @@ pub fn initialize_audio_channels(audio: Res<Audio>) {
         DEFAULT_INTERFACE_VOLUME,
         &AudioChannel::new(AUDIO_INTERFACE_CHANNEL.to_owned()),
     );
+
+
+    audio.play_looped_in_channel(
+            assets.load(MUSIC_MAIN_THEME), &music_chan);
 }
