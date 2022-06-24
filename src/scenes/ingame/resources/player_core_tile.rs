@@ -34,7 +34,7 @@ impl PlayerCoreTile {
         let texture = asset_server.load("textures/block_core.png");
 
         let sprite_bundle = SpriteBundle {
-            texture: texture,
+            texture,
             transform: Transform::from_xyz(location.x, location.y, PLAYER_TILE_Z),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(PLAYER_TILE_SIZE, PLAYER_TILE_SIZE)),

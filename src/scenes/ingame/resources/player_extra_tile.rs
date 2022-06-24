@@ -41,7 +41,7 @@ impl PlayerExtraTile {
         let texture = loot_type.player_extra_tile_texture(asset_server);
 
         let sprite_bundle = SpriteBundle {
-            texture: texture,
+            texture,
             transform: Transform::from_xyz(location.x, location.y, PLAYER_TILE_Z),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(PLAYER_TILE_SIZE, PLAYER_TILE_SIZE)),
