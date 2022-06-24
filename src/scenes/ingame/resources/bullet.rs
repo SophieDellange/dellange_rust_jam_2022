@@ -8,7 +8,7 @@ use crate::scenes::ingame::resources::player_core_tile::PlayerCoreTile;
 
 use super::{Enemy, Player};
 
-pub const BULLET_SIZE: Vec2 = const_vec2!([6., 6.]);
+pub const BULLET_SIZE: Vec2 = const_vec2!([10., 10.]);
 pub const BULLET_SPEED: f32 = 14.;
 
 pub const ENEMY_BULLET_INTERVAL: f32 = 1.;
