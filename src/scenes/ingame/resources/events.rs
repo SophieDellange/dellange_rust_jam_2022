@@ -1,20 +1,27 @@
-use super::{Enemy, Loot, Player, Score, BULLET_SIZE, BULLET_SPEED, ENEMY_KILLED_POINTS};
+#[allow(clippy::wildcard_imports)]
+use crate::scenes::ingame::constants::*;
+
+use super::{Enemy, Loot, Player, Score, BULLET_SIZE, BULLET_SPEED,ENEMY_KILLED_POINTS};
 use bevy::prelude::*;
-use bevy::sprite::collide_aabb::*;
+use bevy::sprite::collide_aabb::collide;
+use bevy_kira_audio::{Audio, AudioChannel};
 
 #[derive(Component)]
 pub struct Collider;
 
-#[derive(Component, Debug, Reflect)]
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
 pub struct BlockData {
     pub health: u8,
+    pub max_health: u8,
     pub alive: bool,
 }
 
 impl BlockData {
-    pub fn new(health: u8) -> Self {
+    pub fn new(with_health: u8) -> Self {
         Self {
-            health,
+            health: with_health,
+            max_health: with_health,
             alive: true,
         }
     }
@@ -32,7 +39,7 @@ pub struct BulletCollisionEvent {
 }
 
 ///
-/// Note: could check for bullet_hits in bullet_move instead of having a sparate system.
+/// Note: could check for `bullet_hits` in `bullet_move` instead of having a sparate system.
 ///
 pub fn check_or_bullet_collisions(
     mut commands: Commands,
@@ -60,7 +67,7 @@ pub fn check_or_bullet_collisions(
                 commands.entity(bull_entity).despawn();
                 collision_event.send(BulletCollisionEvent {
                     entity: coll_entity,
-                })
+                });
             }
         }
     }
@@ -72,25 +79,45 @@ pub fn bullet_hits(
     mut q_score: Query<&mut Score>,
     mut events: EventReader<BulletCollisionEvent>,
     asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     for e in events.iter() {
         if let Ok((entity, mut block_data, transform, is_player)) = q_collided.get_mut(e.entity) {
-            block_data.deal_damage(5);
-            if !block_data.alive {
+            block_data.deal_damage(BASIC_BULLET_DAMAGE);
+
+            audio.play_in_channel(
+                asset_server.load(SOUND_HIT_ENEMY),
+                &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+            );
+
+            if !block_data.alive && is_player.is_none() {
                 commands.entity(entity).despawn();
 
-                if is_player.is_none() {
-                    Loot::random().spawn(
-                        transform.translation.truncate(),
-                        &mut commands,
-                        &asset_server,
-                    );
+                audio.play_in_channel(
+                    asset_server.load(SOUND_ENEMY_DEATH),
+                    &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+                );
 
-                    // Note that this does not update the text; that's done via change detection.
-                    //
-                    q_score.single_mut().0 += ENEMY_KILLED_POINTS;
-                }
+                Loot::random().spawn(
+                    transform.translation.truncate(),
+                    &mut commands,
+                    &asset_server,
+                );
+                
+                // Note that this does not update the text; that's done via change detection.
+                //
+                q_score.single_mut().0 += ENEMY_KILLED_POINTS;
             }
+        }
+    }
+}
+
+
+pub fn health_based_status(mut query: Query<(&mut Sprite, &BlockData)>) {
+    for (mut sprite, block) in query.iter_mut() {
+        if block.health < block.max_health {
+            let red_amt = f32::from(block.health) / f32::from(block.max_health) * -1.0;
+            sprite.color = Color::rgb(1.0 + red_amt.sin(), red_amt.tan(), red_amt.tan());
         }
     }
 }
@@ -98,5 +125,6 @@ pub fn bullet_hits(
 pub fn update_scoreboard(mut q_score_text: Query<(&mut Text, &Score), Changed<Score>>) {
     if let Ok((mut text, Score(score))) = q_score_text.get_single_mut() {
         text.sections[0].value = format!("{}", score);
+
     }
 }

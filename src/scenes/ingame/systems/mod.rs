@@ -1,6 +1,10 @@
+
+
 use bevy::{prelude::*, render::camera::Camera2d};
+use bevy_kira_audio::{Audio, AudioChannel};
 use rand::{thread_rng, Rng};
 
+#[allow(clippy::wildcard_imports)]
 use super::{
     camera_utils::*, components::LootTransported, constants::*, resources::*, services::*,
 };
@@ -18,6 +22,7 @@ pub fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
 pub fn spawn_ui(mut commands: Commands) {
     commands.spawn_bundle(UiCameraBundle::default());
 }
+
 
 pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
     let tile_atlas = TileAtlas::new(&asset_server);
@@ -37,14 +42,36 @@ pub fn generate_map_and_tiles(mut commands: Commands, asset_server: Res<AssetSer
     }
 }
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
     for _ in 0..ENEMIES_COUNT {
         let location = Vec2::new(
-            thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16)) as f32,
-            -(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16)) as f32),
+            f32::from(thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16))),
+            -f32::from(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16))),
         );
 
-        EnemyBundle::spawn(location, &mut commands, &asset_server);
+        EnemyBundle::spawn(location, &mut commands, None ,&asset_server);
+    }
+}
+
+#[allow(clippy::cast_possible_truncation)]
+pub fn spawn_enemies_tsunami( mut commands: Commands, audio: Res<Audio>, asset_server: Res<AssetServer>, timer: Res<Time>){
+
+    let difficulty = Some(timer.seconds_since_startup() as f32 / DIFFICULTY_RAMP_UP_EVERY_NTH_SECONDS);
+
+    let enemies_amount= thread_rng().gen_range(0..ENEMIES_COUNT);
+
+    for _ in 0..=enemies_amount {
+        let location = Vec2::new(
+            f32::from(thread_rng().gen_range(0..(MAP_SIZE.0 * TILE_SIZE as u16))),
+            -f32::from(thread_rng().gen_range(0..(MAP_SIZE.1 * TILE_SIZE as u16))),
+        );
+
+        EnemyBundle::spawn(location, &mut commands, difficulty ,&asset_server);
+    }
+
+    if enemies_amount > 0 {
+        audio.play_in_channel(asset_server.load(SOUND_ENEMY_GROWL), &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()));
     }
 }
 
@@ -105,10 +132,10 @@ pub fn move_player_tiles(
     let normalized_diff = Vec2::new(x_diff, y_diff).normalize_or_zero() * PLAYER_MOVE_SPEED;
 
     for mut player_tile_transform in q_player_tiles_transform.iter_mut() {
-        player_tile_transform.translation.x =
-            player_tile_transform.translation.x + normalized_diff.x;
-        player_tile_transform.translation.y =
-            player_tile_transform.translation.y + normalized_diff.y;
+        player_tile_transform.translation.x += normalized_diff.x;
+            //player_tile_transform.translation.x ;
+        player_tile_transform.translation.y += normalized_diff.y;
+            //player_tile_transform.translation.y ;
     }
 }
 
@@ -182,6 +209,9 @@ pub fn pet_move_loot(
         loot_transported.translation.y = pet_location.y;
     }
 }
+// Arbitrary; can be much smaller.
+//
+const EPSILON: f32 = 0.1;
 
 pub fn pet_lock_loot(
     mut commands: Commands,
@@ -228,7 +258,7 @@ pub fn pet_lock_loot(
 
             // For simplicity, we put both positions (horizontal and vertical).
             //
-            if distance_vec.length() < radius {
+            if distance_vec.length() <= radius {
                 potential_positions.push(Vec2::new(
                     player_tile_position.x,
                     player_tile_position.y + (TILE_SIZE * distance_vec.y.signum()),
@@ -240,9 +270,6 @@ pub fn pet_lock_loot(
             }
         }
 
-        // Arbitrary; can be much smaller.
-        //
-        const EPSILON: f32 = 0.1;
 
         let mut available_positions = potential_positions
             .into_iter()
@@ -268,12 +295,10 @@ pub fn pet_lock_loot(
                 tile_lock.translation.x = best_position.x;
                 tile_lock.translation.y = best_position.y;
             } else {
-                TileLock::new().spawn(*best_position, &mut commands, &asset_server);
+                TileLock::spawn(*best_position, &mut commands, &asset_server);
             }
-        } else {
-            if let Ok((lock_entity, _)) = tile_lock {
-                commands.entity(lock_entity).despawn()
-            }
+        } else if let Ok((lock_entity, _)) = tile_lock {
+            commands.entity(lock_entity).despawn();
         }
     }
 }
@@ -297,7 +322,6 @@ pub fn pet_attach_loot(
             );
 
             commands.entity(loot_lock_id).despawn();
-
             commands.entity(loot_transported_id).despawn();
         }
     }
@@ -348,10 +372,27 @@ pub fn move_enemies(mut q_enemies: Query<(&mut Transform, &mut RandomMovement)>,
     }
 }
 
-pub fn update_game() {
-    // println!("update");
-}
-
 pub fn teardown_game() {
     // println!("teardown");
+}
+
+pub fn initialize_audio_channels(audio: Res<Audio>, assets: Res<AssetServer>) {
+
+    let music_chan = AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned());
+    audio.set_volume_in_channel(
+        DEFAULT_MUSIC_VOLUME,
+        &music_chan,
+    );
+    audio.set_volume_in_channel(
+        DEFAULT_EFFECT_VOLUME,
+        &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+    );
+    audio.set_volume_in_channel(
+        DEFAULT_INTERFACE_VOLUME,
+        &AudioChannel::new(AUDIO_INTERFACE_CHANNEL.to_owned()),
+    );
+
+
+    audio.play_looped_in_channel(
+            assets.load(MUSIC_MAIN_THEME), &music_chan);
 }

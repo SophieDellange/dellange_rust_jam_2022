@@ -24,9 +24,9 @@ impl BevyPlugin for Plugin {
 }
 
 fn setup(mut commands: Commands, fonts: Res<Fonts>, mut state: ResMut<State<game::State>>) {
-    let skip_menu_val = std::env::var("JAM_SKIP_MENU").unwrap_or(String::from(""));
+    let skip_menu_val = std::env::var("JAM_SKIP_MENU").unwrap_or_else(|_| String::from(""));
 
-    if skip_menu_val == "" {
+    if skip_menu_val.is_empty() {
         ui::spawn(&mut commands, &fonts);
     } else {
         state.set(game::State::Play).unwrap();

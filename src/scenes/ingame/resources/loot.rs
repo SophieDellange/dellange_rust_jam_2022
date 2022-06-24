@@ -1,3 +1,6 @@
+// This is due to #[derive(Bundle)]  issue https://github.com/bevyengine/bevy/issues/4601
+#![allow(clippy::forget_non_drop)]
+
 use bevy::{math::const_vec2, prelude::*};
 
 use super::LootType;
@@ -30,10 +33,10 @@ impl Loot {
 
     pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
         let loot = Loot::random();
-        let texture = loot.loot_type.texture(&asset_server);
+        let texture = loot.loot_type.texture(asset_server);
 
         let sprite_bundle = SpriteBundle {
-            texture: texture,
+            texture,
             transform: Transform::from_xyz(location.x, location.y, LOOT_Z),
             sprite: Sprite {
                 custom_size: Some(LOOT_SIZE),
