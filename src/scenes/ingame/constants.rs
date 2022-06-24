@@ -9,6 +9,8 @@ pub const LOOT_COUNT: u8 = 4;
 pub const PLAYER_MOVE_SPEED: f32 = 7.5;
 pub const PET_MOVE_SPEED: f32 = 20.0;
 
+pub const DIFFICULTY_RAMP_UP_EVERY_NTH_SECONDS :f32 = 45.0;
+
 // Distance from the center of the loot, for the pet to pick the loot.
 //
 pub const PET_PICK_LOOT_RADIUS: f32 = 10.0;

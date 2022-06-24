@@ -94,7 +94,7 @@ pub fn bullet_hits(
                 commands.entity(entity).despawn();
 
                 audio.play_in_channel(
-                    asset_server.load(SOUND_ENEMY_GROWL),
+                    asset_server.load(SOUND_ENEMY_DEATH),
                     &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
                 );
 

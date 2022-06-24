@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::{Plugin as BevyPlugin, *};
+use bevy::{prelude::{Plugin as BevyPlugin, *}, core::FixedTimestep};
 
 mod camera_utils;
 mod components;
@@ -41,7 +41,6 @@ impl BevyPlugin for Plugin {
                 .with_system(move_pet)
                 .with_system(move_camera.after(move_player_tiles))
                 .with_system(move_enemies)
-                .with_system(update_game.after(move_player_tiles))
                 .with_system(resources::spawn_player_bullets)
                 .with_system(resources::spawn_enemy_bullets)
                 .with_system(resources::move_bullets)
@@ -53,6 +52,11 @@ impl BevyPlugin for Plugin {
                 .with_system(pet_lock_loot.after(pet_move_loot))
                 .with_system(pet_attach_loot.after(pet_move_loot))
                 .with_system(resources::health_based_status.after(resources::bullet_hits)),
+        )
+        .add_system_set(
+            SystemSet::on_update(game::State::Play)
+                .with_run_criteria(FixedTimestep::step(8.0) )
+                .with_system(spawn_enemies_tsunami)
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game))
         .add_event::<resources::BulletCollisionEvent>()
