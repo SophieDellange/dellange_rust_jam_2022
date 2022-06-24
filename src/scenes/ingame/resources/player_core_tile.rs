@@ -27,7 +27,7 @@ impl PlayerCoreTile {
         }
     }
 
-    pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
+    pub fn spawn(location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
         let tile = PlayerCoreTile::new();
         let player = Player::new();
 
