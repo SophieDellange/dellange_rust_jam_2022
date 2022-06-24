@@ -31,7 +31,7 @@ impl Loot {
         Self::new(loot_type)
     }
 
-    pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
+    pub fn spawn(location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
         let loot = Loot::random();
         let texture = loot.loot_type.texture(asset_server);
 

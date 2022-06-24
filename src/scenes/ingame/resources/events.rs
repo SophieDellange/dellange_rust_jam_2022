@@ -95,7 +95,7 @@ pub fn bullet_hits(
                     &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
                 );
 
-                Loot::random().spawn(
+                Loot::spawn(
                     transform.translation.truncate(),
                     &mut commands,
                     &asset_server,
