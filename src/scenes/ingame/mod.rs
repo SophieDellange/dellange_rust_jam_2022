@@ -61,7 +61,7 @@ impl BevyPlugin for Plugin {
                 .with_run_criteria(FixedTimestep::step(8.0))
                 .with_system(spawn_enemies_tsunami),
         )
-        .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game))
+        .add_system_set(SystemSet::on_exit(game::State::Play).with_system(gameover))
         .add_event::<resources::BulletCollisionEvent>()
         .register_type::<BlockData>();
     }

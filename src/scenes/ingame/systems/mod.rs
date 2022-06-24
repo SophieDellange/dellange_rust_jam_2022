@@ -374,8 +374,64 @@ pub fn move_enemies(mut q_enemies: Query<(&mut Transform, &mut RandomMovement)>,
     }
 }
 
-pub fn teardown_game() {
-    // println!("teardown");
+pub fn gameover(
+    mut commands: Commands,
+    q_player_core_tile: Query<(), With<PlayerCoreTile>>,
+    mut l_gameover_timer: Local<Option<Timer>>,
+    time: Res<Time>,
+    asset_server: Res<AssetServer>,
+) {
+    if q_player_core_tile.get_single().is_ok() {
+        if let Some(gameover_timer) = l_gameover_timer.as_mut() {
+            gameover_timer.tick(time.delta());
+
+            if gameover_timer.finished() {
+                todo!("Write change state to main menu");
+            }
+        } else {
+            if true {
+                todo!("Disable player tiles/bullets");
+            }
+
+            *l_gameover_timer = Some(Timer::new(GAMEOVER_TIME, false));
+
+            let style = Style {
+                align_self: AlignSelf::FlexEnd,
+                // I'm exhausted of trawling through docs and examples for such a simple operation as
+                // centering a text.
+                //
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    top: Val::Px(290.),
+                    left: Val::Px(320.),
+                    ..default()
+                },
+                ..default()
+            };
+
+            let text = Text::with_section(
+                "GAME OVER",
+                TextStyle {
+                    font: asset_server.load(FONT_LOCATION),
+                    font_size: 64.,
+                    color: Color::WHITE,
+                },
+                // Note: You can use `Default::default()` in place of the `TextAlignment`
+                TextAlignment {
+                    horizontal: HorizontalAlign::Center,
+                    ..default()
+                },
+            );
+
+            let text_bundle = TextBundle {
+                style,
+                text,
+                ..default()
+            };
+
+            commands.spawn_bundle(text_bundle);
+        }
+    }
 }
 
 pub fn initialize_audio_channels(audio: Res<Audio>, assets: Res<AssetServer>) {

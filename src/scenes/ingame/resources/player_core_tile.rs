@@ -9,7 +9,7 @@ use super::{BlockData, Player};
 pub const PLAYER_TILE_Z: f32 = 1.0;
 pub const PLAYER_TILE_SIZE: f32 = 64.;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct PlayerCoreTile {
     pub firing_clock: Timer,
 }
