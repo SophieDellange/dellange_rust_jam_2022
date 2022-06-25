@@ -10,8 +10,9 @@ impl TileAtlas {
     pub fn new(asset_server: &Res<AssetServer>) -> Self {
         let texture_terrain = asset_server.load("textures/ground_terrain.png");
         let texture_water = asset_server.load("textures/ground_water.png");
+        let texture_other = asset_server.load("textures/ground_other.png");
 
-        let textures = vec![texture_terrain, texture_water];
+        let textures = vec![texture_terrain, texture_water,texture_other];
 
         Self { textures }
     }

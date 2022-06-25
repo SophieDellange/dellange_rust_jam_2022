@@ -23,7 +23,12 @@ impl MapGenerator {
             .map(|_| {
                 (0..self.map_width)
                     .map(|_| {
-                        let tile_type = thread_rng().gen_range(0..self.tile_atlas.tile_types());
+
+                        let tile_type = match  thread_rng().gen_range(0..=100){
+                            i32::MIN..=-1_i32 | 101_i32..=i32::MAX  | 0_i32..=90 => 0,
+                            91..=95 => 1,
+                            96..=100 => 2,
+                        };
                         self.tile_atlas.tile_of_type(tile_type)
                     })
                     .collect()
