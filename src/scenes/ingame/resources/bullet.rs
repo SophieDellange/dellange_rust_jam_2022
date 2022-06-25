@@ -1,3 +1,6 @@
+// This is due to #[derive(Bundle)]  issue https://github.com/bevyengine/bevy/issues/4601
+#![allow(clippy::forget_non_drop)]
+
 use bevy::{
     math::const_vec2, prelude::*, render::camera::Camera2d, sprite::collide_aabb::collide,
     utils::Duration,
@@ -29,6 +32,7 @@ pub struct BulletItem {
     speed: f32,
     life_time: Timer,
 }
+
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Bundle)]

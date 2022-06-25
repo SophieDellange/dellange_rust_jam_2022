@@ -1,3 +1,6 @@
+// This is due to #[derive(Bundle)]  issue https://github.com/bevyengine/bevy/issues/4601
+#![allow(clippy::forget_non_drop)]
+
 use bevy::{math::const_vec2, prelude::*};
 
 const PET_Z: f32 = 1.0;
@@ -18,7 +21,7 @@ impl Pet {
         Self {}
     }
 
-    pub fn spawn(&self, location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
+    pub fn spawn(location: Vec2, commands: &mut Commands, asset_server: &Res<AssetServer>) {
         let pet = Self::new();
 
         let texture = asset_server.load("textures/hook.png");

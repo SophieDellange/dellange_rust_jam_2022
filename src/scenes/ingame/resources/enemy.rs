@@ -8,6 +8,6 @@ pub struct Enemy {}
 
 impl Enemy {
     pub fn new() -> Self {
-        Self {  }
+        Self {}
     }
 }

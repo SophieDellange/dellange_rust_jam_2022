@@ -1,3 +1,6 @@
+// This is due to #[derive(Bundle)]  issue https://github.com/bevyengine/bevy/issues/4601
+#![allow(clippy::forget_non_drop)]
+
 use bevy::prelude::*;
 use bevy::utils::Duration;
 
@@ -31,7 +34,7 @@ impl PlayerCoreTile {
         let tile = PlayerCoreTile::new();
         let player = Player::new();
 
-        let texture = asset_server.load("textures/block_core.png");
+        let texture = asset_server.load("textures/creature_hearth.png");
 
         let sprite_bundle = SpriteBundle {
             texture,

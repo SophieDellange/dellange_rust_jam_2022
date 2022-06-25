@@ -1,3 +1,6 @@
+// This is due to #[derive(Bundle)]  issue https://github.com/bevyengine/bevy/issues/4601
+#![allow(clippy::forget_non_drop)]
+
 use bevy::prelude::*;
 
 #[derive(Component)]

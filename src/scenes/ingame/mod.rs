@@ -1,6 +1,9 @@
 use std::time::Duration;
 
-use bevy::{prelude::{Plugin as BevyPlugin, *}, core::FixedTimestep};
+use bevy::{
+    core::FixedTimestep,
+    prelude::{Plugin as BevyPlugin, *},
+};
 
 mod camera_utils;
 mod components;
@@ -55,8 +58,8 @@ impl BevyPlugin for Plugin {
         )
         .add_system_set(
             SystemSet::on_update(game::State::Play)
-                .with_run_criteria(FixedTimestep::step(8.0) )
-                .with_system(spawn_enemies_tsunami)
+                .with_run_criteria(FixedTimestep::step(8.0))
+                .with_system(spawn_enemies_tsunami),
         )
         .add_system_set(SystemSet::on_exit(game::State::Play).with_system(teardown_game))
         .add_event::<resources::BulletCollisionEvent>()
