@@ -160,30 +160,32 @@ pub fn move_pet(
     q_camera: Query<&GlobalTransform, With<Camera2d>>,
     mut q_pet: Query<&mut Transform, With<Pet>>,
 ) {
-    let window = windows.get_primary().unwrap();
+    if let Ok(mut transform) = q_pet.get_single_mut() {
+        let window = windows.get_primary().unwrap();
 
-    if let Some(mouse_pos) = window.cursor_position() {
-        let camera_translation = q_camera.single().translation.truncate();
-        let pet_traslation = &mut q_pet.single_mut().translation;
+        if let Some(mouse_pos) = window.cursor_position() {
+            let camera_translation = q_camera.single().translation.truncate();
+            let pet_traslation = &mut transform.translation;
 
-        let pet_target = Vec2::new(
-            camera_translation.x - window.width() / 2. + mouse_pos.x,
-            camera_translation.y - window.height() / 2. + mouse_pos.y,
-        );
+            let pet_target = Vec2::new(
+                camera_translation.x - window.width() / 2. + mouse_pos.x,
+                camera_translation.y - window.height() / 2. + mouse_pos.y,
+            );
 
-        let target_distance = pet_target - pet_traslation.truncate();
+            let target_distance = pet_target - pet_traslation.truncate();
 
-        if target_distance.length().abs() < PET_MOVE_SPEED {
-            pet_traslation.x = pet_target.x;
-            pet_traslation.y = pet_target.y;
-        } else {
-            let pet_move_norm = (pet_target - pet_traslation.truncate()).normalize();
-            let pet_move = pet_move_norm * PET_MOVE_SPEED;
+            if target_distance.length().abs() < PET_MOVE_SPEED {
+                pet_traslation.x = pet_target.x;
+                pet_traslation.y = pet_target.y;
+            } else {
+                let pet_move_norm = (pet_target - pet_traslation.truncate()).normalize();
+                let pet_move = pet_move_norm * PET_MOVE_SPEED;
 
-            pet_traslation.x += pet_move.x;
-            pet_traslation.y += pet_move.y;
+                pet_traslation.x += pet_move.x;
+                pet_traslation.y += pet_move.y;
+            }
         }
-    }
+    };
 }
 
 pub fn pet_pick_loot(
@@ -196,14 +198,16 @@ pub fn pet_pick_loot(
     let any_loot_transported = q_loot_transported.get_single().is_ok();
 
     if !any_loot_transported && q_mouse_buttons.just_pressed(MouseButton::Left) {
-        let pet_location = q_pet.single().translation.truncate();
+        if let Ok(pet_transform) = q_pet.get_single() {
+            let pet_location = pet_transform.translation.truncate();
 
-        for (loot_entity, loot_location) in q_loot.iter() {
-            let loot_location = loot_location.translation.truncate();
-            let loot_distance = (pet_location - loot_location).length().abs();
+            for (loot_entity, loot_location) in q_loot.iter() {
+                let loot_location = loot_location.translation.truncate();
+                let loot_distance = (pet_location - loot_location).length().abs();
 
-            if loot_distance <= PET_PICK_LOOT_RADIUS {
-                commands.entity(loot_entity).insert(LootTransported::new());
+                if loot_distance <= PET_PICK_LOOT_RADIUS {
+                    commands.entity(loot_entity).insert(LootTransported::new());
+                }
             }
         }
     }
@@ -215,14 +219,16 @@ pub fn pet_move_loot(
         Query<&mut Transform, With<LootTransported>>,
     )>,
 ) {
-    let pet_location = q.p0().single().translation;
+    if let Ok(pet_transform) = q.p0().get_single() {
+        let pet_location = pet_transform.translation;
 
-    let mut q1 = q.p1();
-    let loot_transported = q1.get_single_mut();
+        let mut q1 = q.p1();
+        let loot_transported = q1.get_single_mut();
 
-    if let Ok(mut loot_transported) = loot_transported {
-        loot_transported.translation.x = pet_location.x;
-        loot_transported.translation.y = pet_location.y;
+        if let Ok(mut loot_transported) = loot_transported {
+            loot_transported.translation.x = pet_location.x;
+            loot_transported.translation.y = pet_location.y;
+        }
     }
 }
 // Arbitrary; can be much smaller.
@@ -393,6 +399,7 @@ pub fn gameover(
     mut commands: Commands,
     q_player_core_tile: Query<(), With<PlayerCoreTile>>,
     q_player_extra_tiles: Query<Entity, With<PlayerExtraTile>>,
+    q_pet: Query<Entity, With<Pet>>,
     mut l_gameover_timer: Local<Option<Timer>>,
     mut state: ResMut<State<game::State>>,
     time: Res<Time>,
@@ -417,6 +424,10 @@ pub fn gameover(
             //
             for tile_id in q_player_extra_tiles.iter() {
                 commands.entity(tile_id).despawn();
+            }
+
+            for pet_id in q_pet.iter() {
+                commands.entity(pet_id).despawn();
             }
 
             *l_gameover_timer = Some(Timer::new(GAMEOVER_TIME, false));
