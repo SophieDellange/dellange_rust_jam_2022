@@ -87,23 +87,25 @@ pub fn bullet_hits(
                 &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
             );
 
-            if !block_data.alive && is_player.is_none() {
+            if !block_data.alive {
                 commands.entity(entity).despawn();
 
-                audio.play_in_channel(
-                    asset_server.load(SOUND_ENEMY_DEATH),
-                    &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
-                );
+                if is_player.is_none() {
+                    audio.play_in_channel(
+                        asset_server.load(SOUND_ENEMY_DEATH),
+                        &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
+                    );
 
-                Loot::spawn(
-                    transform.translation.truncate(),
-                    &mut commands,
-                    &asset_server,
-                );
+                    Loot::spawn(
+                        transform.translation.truncate(),
+                        &mut commands,
+                        &asset_server,
+                    );
 
-                // Note that this does not update the text; that's done via change detection.
-                //
-                q_score.single_mut().0 += ENEMY_KILLED_POINTS;
+                    // Note that this does not update the text; that's done via change detection.
+                    //
+                    q_score.single_mut().0 += ENEMY_KILLED_POINTS;
+                }
             }
         }
     }

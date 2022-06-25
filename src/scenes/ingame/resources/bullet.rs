@@ -33,7 +33,6 @@ pub struct BulletItem {
     life_time: Timer,
 }
 
-
 #[allow(clippy::module_name_repetitions)]
 #[derive(Bundle)]
 pub struct BulletBundle<C: Component> {

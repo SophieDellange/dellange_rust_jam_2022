@@ -1,11 +1,24 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, render::camera::Camera2d};
 use bevy_kira_audio::{Audio, AudioChannel};
 use rand::{thread_rng, Rng};
+
+use crate::game;
 
 #[allow(clippy::wildcard_imports)]
 use super::{
     camera_utils::*, components::LootTransported, constants::*, resources::*, services::*,
 };
+
+// When adding new entries, remember to remove them in the cleanup() system.
+//
+pub fn init_resources(mut commands: Commands) {
+    commands.insert_resource(EnemyBulletTimer(Timer::new(
+        Duration::from_secs_f32(ENEMY_BULLET_INTERVAL),
+        false,
+    )))
+}
 
 pub fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
     let mut camera = OrthographicCameraBundle::new_2d();
@@ -334,31 +347,33 @@ pub fn move_camera(
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
     windows: Res<Windows>,
 ) {
-    let player_translation = q_player_transform.single().translation;
-    let camera_translation = &mut q_camera.single_mut().translation;
+    if let Ok(player_transform) = q_player_transform.get_single() {
+        let player_translation = player_transform.translation;
+        let camera_translation = &mut q_camera.single_mut().translation;
 
-    let (nopan_area_top_left, nopan_area_bottom_right) =
-        nopan_area(&windows, camera_translation.truncate());
-    let (camera_limit_top_left, camera_limit_bottom_right) = camera_limits(&windows);
+        let (nopan_area_top_left, nopan_area_bottom_right) =
+            nopan_area(&windows, camera_translation.truncate());
+        let (camera_limit_top_left, camera_limit_bottom_right) = camera_limits(&windows);
 
-    if player_translation.x < nopan_area_top_left.x {
-        camera_translation.x = (camera_translation.x + player_translation.x
-            - nopan_area_top_left.x)
-            .max(camera_limit_top_left.x);
-    } else if player_translation.x > nopan_area_bottom_right.x {
-        camera_translation.x = (camera_translation.x + player_translation.x
-            - nopan_area_bottom_right.x)
-            .min(camera_limit_bottom_right.x);
-    }
+        if player_translation.x < nopan_area_top_left.x {
+            camera_translation.x = (camera_translation.x + player_translation.x
+                - nopan_area_top_left.x)
+                .max(camera_limit_top_left.x);
+        } else if player_translation.x > nopan_area_bottom_right.x {
+            camera_translation.x = (camera_translation.x + player_translation.x
+                - nopan_area_bottom_right.x)
+                .min(camera_limit_bottom_right.x);
+        }
 
-    if player_translation.y > nopan_area_top_left.y {
-        camera_translation.y = (camera_translation.y + player_translation.y
-            - nopan_area_top_left.y)
-            .min(camera_limit_top_left.y);
-    } else if player_translation.y < nopan_area_bottom_right.y {
-        camera_translation.y = (camera_translation.y + player_translation.y
-            - nopan_area_bottom_right.y)
-            .max(camera_limit_bottom_right.y);
+        if player_translation.y > nopan_area_top_left.y {
+            camera_translation.y = (camera_translation.y + player_translation.y
+                - nopan_area_top_left.y)
+                .min(camera_limit_top_left.y);
+        } else if player_translation.y < nopan_area_bottom_right.y {
+            camera_translation.y = (camera_translation.y + player_translation.y
+                - nopan_area_bottom_right.y)
+                .max(camera_limit_bottom_right.y);
+        }
     }
 }
 
@@ -377,20 +392,31 @@ pub fn move_enemies(mut q_enemies: Query<(&mut Transform, &mut RandomMovement)>,
 pub fn gameover(
     mut commands: Commands,
     q_player_core_tile: Query<(), With<PlayerCoreTile>>,
+    q_player_extra_tiles: Query<Entity, With<PlayerExtraTile>>,
     mut l_gameover_timer: Local<Option<Timer>>,
+    mut state: ResMut<State<game::State>>,
     time: Res<Time>,
     asset_server: Res<AssetServer>,
 ) {
-    if q_player_core_tile.get_single().is_ok() {
+    if q_player_core_tile.get_single().is_err() {
         if let Some(gameover_timer) = l_gameover_timer.as_mut() {
             gameover_timer.tick(time.delta());
 
             if gameover_timer.finished() {
-                todo!("Write change state to main menu");
+                // Don't forget to reset, otherwise, the subsequent game over scenes will finish immediately!
+                //
+                *l_gameover_timer = None;
+                state.set(game::State::Title).unwrap();
             }
         } else {
-            if true {
-                todo!("Disable player tiles/bullets");
+            // Ensure that all the other tiles are removed. This can be removed if/when the logic to
+            // remove disconnected tiles is wired (as they'll be despawned by that service).
+            //
+            // We don't despawn the player bullets; this is intentional, but they can also be despawned
+            // if it gives a better look.
+            //
+            for tile_id in q_player_extra_tiles.iter() {
+                commands.entity(tile_id).despawn();
             }
 
             *l_gameover_timer = Some(Timer::new(GAMEOVER_TIME, false));
@@ -447,4 +473,10 @@ pub fn initialize_audio_channels(audio: Res<Audio>, assets: Res<AssetServer>) {
     );
 
     audio.play_looped_in_channel(assets.load(MUSIC_MAIN_THEME), &music_chan);
+}
+
+pub fn cleanup(world: &mut World) {
+    world.clear_entities();
+
+    world.remove_resource::<EnemyBulletTimer>();
 }
