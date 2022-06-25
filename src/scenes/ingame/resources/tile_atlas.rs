@@ -12,13 +12,12 @@ impl TileAtlas {
         let texture_water = asset_server.load("textures/ground_water.png");
         let texture_other = asset_server.load("textures/ground_other.png");
 
-        let textures = vec![texture_terrain, texture_water,texture_other];
+        let textures = vec![texture_terrain, texture_water, texture_other];
 
         Self { textures }
     }
 
     pub fn tile_of_type(&self, mut tile_type: usize) -> Tile {
-
         if tile_type > self.textures.len() {
             tile_type = 0;
         }

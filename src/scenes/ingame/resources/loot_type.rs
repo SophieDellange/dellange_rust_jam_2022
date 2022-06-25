@@ -20,7 +20,7 @@ const ALL_PARTS_TEXTURES: [&str; 8] = [
     "creature_rabbit_0.png",
     "creature_rabbit_1.png",
     "creature_talons_0.png",
-    "creature_hearth.png"
+    "creature_hearth.png",
 ];
 
 impl LootType {
@@ -49,10 +49,9 @@ impl LootType {
 
     pub fn player_extra_tile_texture(&self, asset_server: &AssetServer) -> Handle<Image> {
         let texture_range = match self {
-            LootType::GoldCoin => 
-               0..=1,
+            LootType::GoldCoin => 0..=1,
             LootType::Bomb => 2..=3,
-            LootType::Torch =>  4..=5,
+            LootType::Torch => 4..=5,
             LootType::KeyBlue => 6..=7,
         };
 

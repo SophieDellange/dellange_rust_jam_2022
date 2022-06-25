@@ -38,10 +38,10 @@ impl PlayerExtraTile {
         let block_data = BlockData::new(EXTRA_TILE_HEALTH);
 
         let texture = loot_type.player_extra_tile_texture(asset_server);
-        let mut transform =Transform::from_xyz(location.x, location.y, PLAYER_TILE_Z);
+        let mut transform = Transform::from_xyz(location.x, location.y, PLAYER_TILE_Z);
 
         let rotation_amt = match thread_rng().gen_range(0..=3) {
-            i32::MIN..=-1_i32 | 3_i32..=i32::MAX => 0.0 ,
+            i32::MIN..=-1_i32 | 3_i32..=i32::MAX => 0.0,
             0_i32 => std::f32::consts::FRAC_PI_2,
             1 => std::f32::consts::PI,
             2 => std::f32::consts::FRAC_PI_2 * 2.,
@@ -51,7 +51,7 @@ impl PlayerExtraTile {
 
         let sprite_bundle = SpriteBundle {
             texture,
-            transform ,
+            transform,
             sprite: Sprite {
                 custom_size: Some(Vec2::new(PLAYER_TILE_SIZE, PLAYER_TILE_SIZE)),
                 ..default()
