@@ -53,7 +53,12 @@ pub struct EnemyBundle {
 }
 
 impl EnemyBundle {
-    pub fn spawn(location: Vec2, commands: &mut Commands, difficulty: Option<f32>,  asset_server: &Res<AssetServer>) {
+    pub fn spawn(
+        location: Vec2,
+        commands: &mut Commands,
+        difficulty: Option<f32>,
+        asset_server: &Res<AssetServer>,
+    ) {
         let texture = asset_server.load("textures/enemy_barnacle.png");
 
         let sprite_bundle = SpriteBundle {
@@ -78,19 +83,16 @@ impl EnemyBundle {
             block_data: BlockData::new(scale_enemy_value(difficulty, 12.0, 10.0)),
         };
 
-
         commands.spawn_bundle(enemy_bundle);
     }
 }
 
-
-
-fn scale_enemy_value (difficulty: Option<f32>, base_value: f32, scale_factor: f32) -> u8{
+fn scale_enemy_value(difficulty: Option<f32>, base_value: f32, scale_factor: f32) -> u8 {
     let max_vailable_value = f32::from(u8::MAX);
-    let calc_value = base_value+ difficulty.unwrap_or(0.0)*scale_factor ;
+    let calc_value = base_value + difficulty.unwrap_or(0.0) * scale_factor;
     let total_value = if calc_value > max_vailable_value {
         max_vailable_value
-    } else { 
+    } else {
         calc_value
     };
 

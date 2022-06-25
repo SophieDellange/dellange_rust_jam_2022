@@ -34,7 +34,7 @@ impl PlayerCoreTile {
         let tile = PlayerCoreTile::new();
         let player = Player::new();
 
-        let texture = asset_server.load("textures/block_core.png");
+        let texture = asset_server.load("textures/creature_hearth.png");
 
         let sprite_bundle = SpriteBundle {
             texture,

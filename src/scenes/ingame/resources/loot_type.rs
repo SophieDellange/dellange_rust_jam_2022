@@ -12,6 +12,17 @@ pub enum LootType {
     KeyBlue,
 }
 
+const ALL_PARTS_TEXTURES: [&str; 8] = [
+    "creature_cow_0.png",
+    "creature_cow_1.png",
+    "creature_monster_0.png",
+    "creature_monster_1.png",
+    "creature_rabbit_0.png",
+    "creature_rabbit_1.png",
+    "creature_talons_0.png",
+    "creature_hearth.png"
+];
+
 impl LootType {
     pub fn texture(&self, asset_server: &Res<AssetServer>) -> Handle<Image> {
         let basename = match self {
@@ -37,14 +48,16 @@ impl LootType {
     }
 
     pub fn player_extra_tile_texture(&self, asset_server: &AssetServer) -> Handle<Image> {
-        let basename = match self {
-            LootType::GoldCoin => "monster_part_0.png",
-            LootType::Bomb => "monster_part_1.png",
-            // Repeated - needs another texture
-            LootType::Torch | LootType::KeyBlue => "monster_part_2.png",
+        let texture_range = match self {
+            LootType::GoldCoin => 
+               0..=1,
+            LootType::Bomb => 2..=3,
+            LootType::Torch =>  4..=5,
+            LootType::KeyBlue => 6..=7,
         };
 
-        let full_path = Path::new(TEXTURES_PATH).join(basename);
+        let real_index = thread_rng().gen_range(texture_range);
+        let full_path = Path::new(TEXTURES_PATH).join(ALL_PARTS_TEXTURES[real_index]);
 
         asset_server.load(full_path)
     }
