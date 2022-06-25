@@ -4,12 +4,12 @@
 use bevy::prelude::*;
 use bevy::utils::Duration;
 
-use super::{BlockData, Player};
+use super::{BlockData, Collider, Player};
 
 pub const PLAYER_TILE_Z: f32 = 1.0;
 pub const PLAYER_TILE_SIZE: f32 = 64.;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct PlayerCoreTile {
     pub firing_clock: Timer,
 }
@@ -18,6 +18,7 @@ pub struct PlayerCoreTile {
 struct PlayerCoreTileBundle {
     tile: PlayerCoreTile,
     player: Player,
+    collider: Collider,
     stats: BlockData,
     #[bundle]
     sprite_bundle: SpriteBundle,
@@ -46,10 +47,13 @@ impl PlayerCoreTile {
             ..default()
         };
 
+        let collider = Collider {};
+
         let player_bundle = PlayerCoreTileBundle {
             tile,
             player,
             sprite_bundle,
+            collider,
             stats: BlockData::new(20),
         };
 

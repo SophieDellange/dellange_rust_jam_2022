@@ -1,11 +1,28 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, render::camera::Camera2d};
 use bevy_kira_audio::{Audio, AudioChannel};
 use rand::{thread_rng, Rng};
+
+use crate::game;
 
 #[allow(clippy::wildcard_imports)]
 use super::{
     camera_utils::*, components::LootTransported, constants::*, resources::*, services::*,
 };
+
+pub struct MusicChannel(AudioChannel);
+pub struct EffectsChannel(AudioChannel);
+pub struct InterfaceChannel(AudioChannel);
+
+// When adding new entries, remember to remove them in the cleanup() system.
+//
+pub fn init_resources(mut commands: Commands) {
+    commands.insert_resource(EnemyBulletTimer(Timer::new(
+        Duration::from_secs_f32(ENEMY_BULLET_INTERVAL),
+        false,
+    )))
+}
 
 pub fn spawn_camera(mut commands: Commands, windows: Res<Windows>) {
     let mut camera = OrthographicCameraBundle::new_2d();
@@ -147,30 +164,32 @@ pub fn move_pet(
     q_camera: Query<&GlobalTransform, With<Camera2d>>,
     mut q_pet: Query<&mut Transform, With<Pet>>,
 ) {
-    let window = windows.get_primary().unwrap();
+    if let Ok(mut transform) = q_pet.get_single_mut() {
+        let window = windows.get_primary().unwrap();
 
-    if let Some(mouse_pos) = window.cursor_position() {
-        let camera_translation = q_camera.single().translation.truncate();
-        let pet_traslation = &mut q_pet.single_mut().translation;
+        if let Some(mouse_pos) = window.cursor_position() {
+            let camera_translation = q_camera.single().translation.truncate();
+            let pet_traslation = &mut transform.translation;
 
-        let pet_target = Vec2::new(
-            camera_translation.x - window.width() / 2. + mouse_pos.x,
-            camera_translation.y - window.height() / 2. + mouse_pos.y,
-        );
+            let pet_target = Vec2::new(
+                camera_translation.x - window.width() / 2. + mouse_pos.x,
+                camera_translation.y - window.height() / 2. + mouse_pos.y,
+            );
 
-        let target_distance = pet_target - pet_traslation.truncate();
+            let target_distance = pet_target - pet_traslation.truncate();
 
-        if target_distance.length().abs() < PET_MOVE_SPEED {
-            pet_traslation.x = pet_target.x;
-            pet_traslation.y = pet_target.y;
-        } else {
-            let pet_move_norm = (pet_target - pet_traslation.truncate()).normalize();
-            let pet_move = pet_move_norm * PET_MOVE_SPEED;
+            if target_distance.length().abs() < PET_MOVE_SPEED {
+                pet_traslation.x = pet_target.x;
+                pet_traslation.y = pet_target.y;
+            } else {
+                let pet_move_norm = (pet_target - pet_traslation.truncate()).normalize();
+                let pet_move = pet_move_norm * PET_MOVE_SPEED;
 
-            pet_traslation.x += pet_move.x;
-            pet_traslation.y += pet_move.y;
+                pet_traslation.x += pet_move.x;
+                pet_traslation.y += pet_move.y;
+            }
         }
-    }
+    };
 }
 
 pub fn pet_pick_loot(
@@ -183,14 +202,16 @@ pub fn pet_pick_loot(
     let any_loot_transported = q_loot_transported.get_single().is_ok();
 
     if !any_loot_transported && q_mouse_buttons.just_pressed(MouseButton::Left) {
-        let pet_location = q_pet.single().translation.truncate();
+        if let Ok(pet_transform) = q_pet.get_single() {
+            let pet_location = pet_transform.translation.truncate();
 
-        for (loot_entity, loot_location) in q_loot.iter() {
-            let loot_location = loot_location.translation.truncate();
-            let loot_distance = (pet_location - loot_location).length().abs();
+            for (loot_entity, loot_location) in q_loot.iter() {
+                let loot_location = loot_location.translation.truncate();
+                let loot_distance = (pet_location - loot_location).length().abs();
 
-            if loot_distance <= PET_PICK_LOOT_RADIUS {
-                commands.entity(loot_entity).insert(LootTransported::new());
+                if loot_distance <= PET_PICK_LOOT_RADIUS {
+                    commands.entity(loot_entity).insert(LootTransported::new());
+                }
             }
         }
     }
@@ -202,14 +223,16 @@ pub fn pet_move_loot(
         Query<&mut Transform, With<LootTransported>>,
     )>,
 ) {
-    let pet_location = q.p0().single().translation;
+    if let Ok(pet_transform) = q.p0().get_single() {
+        let pet_location = pet_transform.translation;
 
-    let mut q1 = q.p1();
-    let loot_transported = q1.get_single_mut();
+        let mut q1 = q.p1();
+        let loot_transported = q1.get_single_mut();
 
-    if let Ok(mut loot_transported) = loot_transported {
-        loot_transported.translation.x = pet_location.x;
-        loot_transported.translation.y = pet_location.y;
+        if let Ok(mut loot_transported) = loot_transported {
+            loot_transported.translation.x = pet_location.x;
+            loot_transported.translation.y = pet_location.y;
+        }
     }
 }
 // Arbitrary; can be much smaller.
@@ -334,31 +357,33 @@ pub fn move_camera(
     mut q_camera: Query<&mut GlobalTransform, With<Camera2d>>,
     windows: Res<Windows>,
 ) {
-    let player_translation = q_player_transform.single().translation;
-    let camera_translation = &mut q_camera.single_mut().translation;
+    if let Ok(player_transform) = q_player_transform.get_single() {
+        let player_translation = player_transform.translation;
+        let camera_translation = &mut q_camera.single_mut().translation;
 
-    let (nopan_area_top_left, nopan_area_bottom_right) =
-        nopan_area(&windows, camera_translation.truncate());
-    let (camera_limit_top_left, camera_limit_bottom_right) = camera_limits(&windows);
+        let (nopan_area_top_left, nopan_area_bottom_right) =
+            nopan_area(&windows, camera_translation.truncate());
+        let (camera_limit_top_left, camera_limit_bottom_right) = camera_limits(&windows);
 
-    if player_translation.x < nopan_area_top_left.x {
-        camera_translation.x = (camera_translation.x + player_translation.x
-            - nopan_area_top_left.x)
-            .max(camera_limit_top_left.x);
-    } else if player_translation.x > nopan_area_bottom_right.x {
-        camera_translation.x = (camera_translation.x + player_translation.x
-            - nopan_area_bottom_right.x)
-            .min(camera_limit_bottom_right.x);
-    }
+        if player_translation.x < nopan_area_top_left.x {
+            camera_translation.x = (camera_translation.x + player_translation.x
+                - nopan_area_top_left.x)
+                .max(camera_limit_top_left.x);
+        } else if player_translation.x > nopan_area_bottom_right.x {
+            camera_translation.x = (camera_translation.x + player_translation.x
+                - nopan_area_bottom_right.x)
+                .min(camera_limit_bottom_right.x);
+        }
 
-    if player_translation.y > nopan_area_top_left.y {
-        camera_translation.y = (camera_translation.y + player_translation.y
-            - nopan_area_top_left.y)
-            .min(camera_limit_top_left.y);
-    } else if player_translation.y < nopan_area_bottom_right.y {
-        camera_translation.y = (camera_translation.y + player_translation.y
-            - nopan_area_bottom_right.y)
-            .max(camera_limit_bottom_right.y);
+        if player_translation.y > nopan_area_top_left.y {
+            camera_translation.y = (camera_translation.y + player_translation.y
+                - nopan_area_top_left.y)
+                .min(camera_limit_top_left.y);
+        } else if player_translation.y < nopan_area_bottom_right.y {
+            camera_translation.y = (camera_translation.y + player_translation.y
+                - nopan_area_bottom_right.y)
+                .max(camera_limit_bottom_right.y);
+        }
     }
 }
 
@@ -374,21 +399,127 @@ pub fn move_enemies(mut q_enemies: Query<(&mut Transform, &mut RandomMovement)>,
     }
 }
 
-pub fn teardown_game() {
-    // println!("teardown");
+pub fn gameover(
+    mut commands: Commands,
+    q_player_core_tile: Query<(), With<PlayerCoreTile>>,
+    q_player_extra_tiles: Query<Entity, With<PlayerExtraTile>>,
+    q_pet: Query<Entity, With<Pet>>,
+    mut l_gameover_timer: Local<Option<Timer>>,
+    mut state: ResMut<State<game::State>>,
+    time: Res<Time>,
+    asset_server: Res<AssetServer>,
+) {
+    if q_player_core_tile.get_single().is_err() {
+        if let Some(gameover_timer) = l_gameover_timer.as_mut() {
+            gameover_timer.tick(time.delta());
+
+            if gameover_timer.finished() {
+                // Don't forget to reset, otherwise, the subsequent game over scenes will finish immediately!
+                //
+                *l_gameover_timer = None;
+                state.set(game::State::Title).unwrap();
+            }
+        } else {
+            // Ensure that all the other tiles are removed. This can be removed if/when the logic to
+            // remove disconnected tiles is wired (as they'll be despawned by that service).
+            //
+            // We don't despawn the player bullets; this is intentional, but they can also be despawned
+            // if it gives a better look.
+            //
+            for tile_id in q_player_extra_tiles.iter() {
+                commands.entity(tile_id).despawn();
+            }
+
+            for pet_id in q_pet.iter() {
+                commands.entity(pet_id).despawn();
+            }
+
+            *l_gameover_timer = Some(Timer::new(GAMEOVER_TIME, false));
+
+            let style = Style {
+                align_self: AlignSelf::FlexEnd,
+                // I'm exhausted of trawling through docs and examples for such a simple operation as
+                // centering a text.
+                //
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    top: Val::Px(290.),
+                    left: Val::Px(320.),
+                    ..default()
+                },
+                ..default()
+            };
+
+            let text = Text::with_section(
+                "GAME OVER",
+                TextStyle {
+                    font: asset_server.load(FONT_LOCATION),
+                    font_size: 64.,
+                    color: Color::WHITE,
+                },
+                // Note: You can use `Default::default()` in place of the `TextAlignment`
+                TextAlignment {
+                    horizontal: HorizontalAlign::Center,
+                    ..default()
+                },
+            );
+
+            let text_bundle = TextBundle {
+                style,
+                text,
+                ..default()
+            };
+
+            commands.spawn_bundle(text_bundle);
+        }
+    }
 }
 
-pub fn initialize_audio_channels(audio: Res<Audio>, assets: Res<AssetServer>) {
-    let music_chan = AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned());
-    audio.set_volume_in_channel(DEFAULT_MUSIC_VOLUME, &music_chan);
-    audio.set_volume_in_channel(
-        DEFAULT_EFFECT_VOLUME,
-        &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
-    );
-    audio.set_volume_in_channel(
-        DEFAULT_INTERFACE_VOLUME,
-        &AudioChannel::new(AUDIO_INTERFACE_CHANNEL.to_owned()),
-    );
+pub fn initialize_audio_channels(
+    mut commands: Commands,
+    audio: Res<Audio>,
+    assets: Res<AssetServer>,
+) {
+    let music_chan = MusicChannel(AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned()));
+    audio.set_volume_in_channel(DEFAULT_MUSIC_VOLUME, &music_chan.0);
 
-    audio.play_looped_in_channel(assets.load(MUSIC_MAIN_THEME), &music_chan);
+    let effects_chan = EffectsChannel(AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()));
+    audio.set_volume_in_channel(DEFAULT_EFFECT_VOLUME, &effects_chan.0);
+
+    let interface_chan = InterfaceChannel(AudioChannel::new(AUDIO_INTERFACE_CHANNEL.to_owned()));
+    audio.set_volume_in_channel(DEFAULT_INTERFACE_VOLUME, &interface_chan.0);
+
+    // This sucks. Due to Bevy (with a single-stage architecture) won't make the resource available
+    // in the same stage, we can't add another init system which starts the music, so we must:
+    //
+    // - add multiple stages (via iyes_loopless)
+    // - add a system that checks on every frame if the music is already playing
+    //
+    audio.play_looped_in_channel(assets.load(MUSIC_MAIN_THEME), &music_chan.0);
+
+    commands.insert_resource(music_chan);
+    commands.insert_resource(effects_chan);
+    commands.insert_resource(interface_chan);
+}
+
+pub fn cleanup(world: &mut World) {
+    world.clear_entities();
+
+    world.remove_resource::<EnemyBulletTimer>();
+
+    let audio = world.resource::<Audio>();
+    let music_chan = world.resource::<MusicChannel>();
+
+    audio.stop_channel(&music_chan.0);
+
+    // It's unclear what's the lifecycle of channels, as there are no references to drop-like concepts/functions;
+    // it's also unclear what the semantics of channel are, since the plugin has no help, and the examples
+    // only add new channels.
+    //
+    // It's possible that the design of this game keeps creating new channels on each round, and that
+    // the required design is to keep the channels in Bevy's World for the whole program execution.
+
+    world.remove_resource::<MusicChannel>();
+    world.remove_resource::<EffectsChannel>();
+    world.remove_resource::<InterfaceChannel>();
 }
