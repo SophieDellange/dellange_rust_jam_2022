@@ -11,6 +11,10 @@ use super::{
     camera_utils::*, components::LootTransported, constants::*, resources::*, services::*,
 };
 
+pub struct MusicChannel(AudioChannel);
+pub struct EffectsChannel(AudioChannel);
+pub struct InterfaceChannel(AudioChannel);
+
 // When adding new entries, remember to remove them in the cleanup() system.
 //
 pub fn init_resources(mut commands: Commands) {
@@ -471,23 +475,51 @@ pub fn gameover(
     }
 }
 
-pub fn initialize_audio_channels(audio: Res<Audio>, assets: Res<AssetServer>) {
-    let music_chan = AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned());
-    audio.set_volume_in_channel(DEFAULT_MUSIC_VOLUME, &music_chan);
-    audio.set_volume_in_channel(
-        DEFAULT_EFFECT_VOLUME,
-        &AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()),
-    );
-    audio.set_volume_in_channel(
-        DEFAULT_INTERFACE_VOLUME,
-        &AudioChannel::new(AUDIO_INTERFACE_CHANNEL.to_owned()),
-    );
+pub fn initialize_audio_channels(
+    mut commands: Commands,
+    audio: Res<Audio>,
+    assets: Res<AssetServer>,
+) {
+    let music_chan = MusicChannel(AudioChannel::new(AUDIO_MUSIC_CHANNEL.to_owned()));
+    audio.set_volume_in_channel(DEFAULT_MUSIC_VOLUME, &music_chan.0);
 
-    audio.play_looped_in_channel(assets.load(MUSIC_MAIN_THEME), &music_chan);
+    let effects_chan = EffectsChannel(AudioChannel::new(AUDIO_EFFECTS_CHANNEL.to_owned()));
+    audio.set_volume_in_channel(DEFAULT_EFFECT_VOLUME, &effects_chan.0);
+
+    let interface_chan = InterfaceChannel(AudioChannel::new(AUDIO_INTERFACE_CHANNEL.to_owned()));
+    audio.set_volume_in_channel(DEFAULT_INTERFACE_VOLUME, &interface_chan.0);
+
+    // This sucks. Due to Bevy (with a single-stage architecture) won't make the resource available
+    // in the same stage, we can't add another init system which starts the music, so we must:
+    //
+    // - add multiple stages (via iyes_loopless)
+    // - add a system that checks on every frame if the music is already playing
+    //
+    audio.play_looped_in_channel(assets.load(MUSIC_MAIN_THEME), &music_chan.0);
+
+    commands.insert_resource(music_chan);
+    commands.insert_resource(effects_chan);
+    commands.insert_resource(interface_chan);
 }
 
 pub fn cleanup(world: &mut World) {
     world.clear_entities();
 
     world.remove_resource::<EnemyBulletTimer>();
+
+    let audio = world.resource::<Audio>();
+    let music_chan = world.resource::<MusicChannel>();
+
+    audio.stop_channel(&music_chan.0);
+
+    // It's unclear what's the lifecycle of channels, as there are no references to drop-like concepts/functions;
+    // it's also unclear what the semantics of channel are, since the plugin has no help, and the examples
+    // only add new channels.
+    //
+    // It's possible that the design of this game keeps creating new channels on each round, and that
+    // the required design is to keep the channels in Bevy's World for the whole program execution.
+
+    world.remove_resource::<MusicChannel>();
+    world.remove_resource::<EffectsChannel>();
+    world.remove_resource::<InterfaceChannel>();
 }
