@@ -17,11 +17,12 @@ impl TileAtlas {
         Self { textures }
     }
 
-    pub fn tile_of_type(&self, tile_type: usize) -> Tile {
-        Tile::new(self.textures[tile_type].clone())
-    }
+    pub fn tile_of_type(&self, mut tile_type: usize) -> Tile {
 
-    pub fn tile_types(&self) -> usize {
-        self.textures.len()
+        if tile_type > self.textures.len() {
+            tile_type = 0;
+        }
+
+        Tile::new(self.textures[tile_type].clone())
     }
 }

@@ -7,12 +7,12 @@ use crate::{
 
 fn main_menu_texts(font: &Handle<Font>) -> (EmbossedText, SimpleText, SimpleText) {
     (
-        EmbossedText::big("Rusty Jam\n\nDellange", font),
+        EmbossedText::big("The Ablockination", font),
         SimpleText::small(
             "Sophie Dellange ÷ 64kramsystem ÷ Mechanought ÷ Joshi Spawnbrood",
             font,
         ),
-        SimpleText::small("\nTemplate by septum | https://septum.io", font),
+        SimpleText::small("Bevy template by septum | https://septum.io", font),
     )
 }
 
